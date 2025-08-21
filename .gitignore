@@ -1,0 +1,13 @@
+cat > .gitignore << 'EOF'
+# Node / Next / Mac
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.DS_Store
+.vscode/
+*.log
+
+# Build artifacts
+*.cache
