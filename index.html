@@ -2436,8 +2436,10 @@ async function sendMessage() {
         }
 
         if (isLinkedInQuestion) {
+            console.log('Fetching LinkedIn data...');
             const linkedinData = await fetchLinkedInData();
             if (linkedinData) {
+                console.log('LinkedIn data fetched:', linkedinData);
                 additionalContext += `\n\nCURRENT LINKEDIN PROFILE DATA (fetched live):\n`;
                 additionalContext += `Headline: ${linkedinData.headline}\n`;
                 additionalContext += `Summary: ${linkedinData.summary}\n`;
@@ -2447,52 +2449,42 @@ async function sendMessage() {
                         additionalContext += `- ${exp.title} at ${exp.company}\n`;
                     });
                 }
+            } else {
+                console.log('Failed to fetch LinkedIn data');
             }
         }
 
         if (isResumeQuestion) {
+            console.log('Fetching resume data...');
             const resumeText = await extractResumeText();
             if (resumeText) {
+                console.log('Resume text extracted:', resumeText.substring(0, 200) + '...');
                 additionalContext += `\n\nRESUME CONTENT (extracted from PDF):\n`;
-                // Extract key sections from resume
-                const sections = resumeText.split(/\n\s*\n/);
-                const relevantSections = sections.filter(section => 
-                    section.toLowerCase().includes('gpa') ||
-                    section.toLowerCase().includes('education') ||
-                    section.toLowerCase().includes('experience') ||
-                    section.toLowerCase().includes('skills') ||
-                    section.toLowerCase().includes('project')
-                );
-                relevantSections.slice(0, 5).forEach(section => {
-                    additionalContext += `${section.trim()}\n\n`;
-                });
+                additionalContext += `${resumeText}\n\n`;
+            } else {
+                console.log('Failed to extract resume text');
+                // If PDF extraction fails, try to provide some basic info
+                additionalContext += `\n\nNote: Could not extract resume PDF content. Using fallback information.\n`;
             }
         }
 
         // Prepare system prompt with live data
         const systemPrompt = `You are Caleb Woldemedhine's AI assistant. Provide concise, accurate answers about Caleb's background and experience.
 
-IMPORTANT: Use the live data provided below when available, as it contains the most current and accurate information from Caleb's resume, LinkedIn, and GitHub profiles.
+IMPORTANT: Use the live data provided below when available, as it contains the most current and accurate information from Caleb's resume, LinkedIn, and GitHub profiles. The static information below is only a fallback - always prioritize the live data above.
 
-ABOUT CALEB:
-Caleb Woldemedhine is a junior Computer Science student at University of Denver, concentrating on AI and ML, with minors in Mathematics and Business Information Analytics. He has a GPA of 3.67. He has Software Engineer Intern experience working on AI-focused projects and possesses skills in programming and data analytics.
-
-CONTACT:
+BASIC INFO (use live data when available):
+- Name: Caleb Woldemedhine
 - Email: caleb.woldemedhine1@gmail.com
 - LinkedIn: https://www.linkedin.com/in/calebwold/
 - GitHub: https://github.com/calebwold
 
-EXPERIENCE:
-- Software Engineer Intern (Summer 2025): AI-focused projects including CAD design AI model and geometry-based material calculation tool
-- Built generative AI applications, time-series forecasting models, data visualizations
-
-SKILLS:
-Advanced: Python, HTML, CSS, JavaScript, MySQL, MongoDB, OpenAI API
-Intermediate: React, TypeScript, Next.js, Java, C++, C#, PyTorch, LangChain, TextBlob, pandas-ta, Plotly, Matplotlib, NumPy, Pandas, Excel, Tableau, REST APIs
-Basic: TensorFlow, Keras, Scikit-learn, Hugging Face Transformers, Prophet, ETL Tools, AWS, PostgreSQL, R, Perl
-
-CAREER GOALS:
-Seeking software engineering internship in data analytics, large language models, machine learning, or AI.
+FALLBACK INFO (only use if live data is not available):
+- Computer Science student at University of Denver
+- Concentration in AI and ML
+- Minors in Mathematics and Business Information Analytics
+- Has Software Engineer Intern experience
+- Skills in programming and data analytics
 
 RESPONSE GUIDELINES:
 - Keep responses concise and natural unless follow-up questions are asked
