@@ -2321,17 +2321,34 @@ async function sendMessage() {
         // Function to extract text from resume PDF
         async function extractResumeText() {
             try {
-                // Load PDF.js library dynamically
+                console.log('Starting PDF extraction...');
+                
+                // Load PDF.js library dynamically with timeout
                 if (!window.pdfjsLib) {
+                    console.log('Loading PDF.js library...');
                     const script = document.createElement('script');
                     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
                     document.head.appendChild(script);
-                    await new Promise(resolve => script.onload = resolve);
+                    
+                    // Wait for PDF.js to load with timeout
+                    await Promise.race([
+                        new Promise(resolve => script.onload = resolve),
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('PDF.js load timeout')), 10000))
+                    ]);
+                    console.log('PDF.js library loaded');
                 }
 
+                console.log('Fetching resume.pdf...');
                 const response = await fetch('resume.pdf');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch resume.pdf: ${response.status}`);
+                }
+                
                 const arrayBuffer = await response.arrayBuffer();
+                console.log('PDF fetched, parsing...');
+                
                 const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                console.log(`PDF parsed, ${pdf.numPages} pages found`);
                 
                 let fullText = '';
                 for (let i = 1; i <= pdf.numPages; i++) {
@@ -2339,12 +2356,20 @@ async function sendMessage() {
                     const textContent = await page.getTextContent();
                     const pageText = textContent.items.map(item => item.str).join(' ');
                     fullText += pageText + '\n';
+                    console.log(`Page ${i} extracted`);
                 }
                 
+                console.log('PDF extraction complete:', fullText.substring(0, 200) + '...');
                 return fullText;
             } catch (error) {
-                console.log('Resume PDF extraction error:', error);
-                return null;
+                console.error('Resume PDF extraction error:', error);
+                // Return fallback information if PDF extraction fails
+                return `Caleb Woldemedhine - Computer Science Student
+University of Denver - GPA: 3.67
+Concentration: AI and ML
+Minors: Mathematics and Business Information Analytics
+Software Engineer Intern experience
+Skills: Python, JavaScript, React, Machine Learning, Data Analytics`;
             }
         }
 
@@ -2464,7 +2489,7 @@ async function sendMessage() {
         // Prepare system prompt with live data
         const systemPrompt = `You are Caleb Woldemedhine's AI assistant. Provide concise, accurate answers about Caleb's background and experience.
 
-IMPORTANT: Use the live data provided below when available, as it contains the most current and accurate information from Caleb's resume, LinkedIn, and GitHub profiles. The static information below is only a fallback - always prioritize the live data above.
+CRITICAL INSTRUCTION: The live data provided below contains the most current and accurate information from Caleb's resume, LinkedIn, and GitHub profiles. ALWAYS use this live data when available instead of any fallback information.
 
 BASIC INFO (use live data when available):
 - Name: Caleb Woldemedhine
@@ -2472,7 +2497,7 @@ BASIC INFO (use live data when available):
 - LinkedIn: https://www.linkedin.com/in/calebwold/
 - GitHub: https://github.com/calebwold
 
-FALLBACK INFO (only use if live data is not available):
+FALLBACK INFO (only use if NO live data is provided):
 - Computer Science student at University of Denver
 - Concentration in AI and ML
 - Minors in Mathematics and Business Information Analytics
