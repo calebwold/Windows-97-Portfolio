@@ -2325,7 +2325,85 @@ async function sendMessage() {
             return [];
         }
 
-        // Check if the question is about GitHub or LinkedIn
+        // Function to extract text from resume PDF
+        async function extractResumeText() {
+            try {
+                // Load PDF.js library dynamically
+                if (!window.pdfjsLib) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                    document.head.appendChild(script);
+                    await new Promise(resolve => script.onload = resolve);
+                }
+
+                const response = await fetch('resume.pdf');
+                const arrayBuffer = await response.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                
+                let fullText = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                }
+                
+                return fullText;
+            } catch (error) {
+                console.log('Resume PDF extraction error:', error);
+                return null;
+            }
+        }
+
+        // Function to fetch LinkedIn profile data (using a web scraping approach)
+        async function fetchLinkedInData() {
+            try {
+                // Use a CORS proxy to fetch LinkedIn profile
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const linkedinUrl = 'https://www.linkedin.com/in/calebwold/';
+                
+                const response = await fetch(proxyUrl + encodeURIComponent(linkedinUrl));
+                if (response.ok) {
+                    const html = await response.text();
+                    
+                    // Extract key information using regex patterns
+                    const extractInfo = (pattern, text) => {
+                        const match = text.match(pattern);
+                        return match ? match[1] : null;
+                    };
+                    
+                    const linkedinData = {
+                        headline: extractInfo(/<title>([^<]+)/i, html) || 'Software Engineer',
+                        summary: extractInfo(/<meta name="description" content="([^"]+)"/i, html) || 'Computer Science student with AI/ML focus',
+                        experience: [],
+                        education: [],
+                        skills: []
+                    };
+                    
+                    // Extract experience section
+                    const experienceMatches = html.match(/<section[^>]*class="[^"]*experience[^"]*"[^>]*>([\s\S]*?)<\/section>/gi);
+                    if (experienceMatches) {
+                        experienceMatches.forEach(match => {
+                            const titleMatch = match.match(/<h3[^>]*>([^<]+)<\/h3>/i);
+                            const companyMatch = match.match(/<h4[^>]*>([^<]+)<\/h4>/i);
+                            if (titleMatch && companyMatch) {
+                                linkedinData.experience.push({
+                                    title: titleMatch[1].trim(),
+                                    company: companyMatch[1].trim()
+                                });
+                            }
+                        });
+                    }
+                    
+                    return linkedinData;
+                }
+            } catch (error) {
+                console.log('LinkedIn data fetch error:', error);
+            }
+            return null;
+        }
+
+        // Check if the question is about GitHub, LinkedIn, or resume
         const isGitHubQuestion = message.toLowerCase().includes('github') || 
                                 message.toLowerCase().includes('repository') || 
                                 message.toLowerCase().includes('repo') ||
@@ -2337,9 +2415,16 @@ async function sendMessage() {
                                   message.toLowerCase().includes('network') ||
                                   message.toLowerCase().includes('professional');
 
+        const isResumeQuestion = message.toLowerCase().includes('resume') || 
+                                message.toLowerCase().includes('cv') ||
+                                message.toLowerCase().includes('gpa') ||
+                                message.toLowerCase().includes('grade') ||
+                                message.toLowerCase().includes('academic') ||
+                                message.toLowerCase().includes('education');
+
         let additionalContext = '';
         
-        // Fetch GitHub information if relevant
+        // Fetch dynamic data based on question type
         if (isGitHubQuestion) {
             const repos = await fetchGitHubRepos();
             if (repos.length > 0) {
@@ -2350,8 +2435,44 @@ async function sendMessage() {
             }
         }
 
+        if (isLinkedInQuestion) {
+            const linkedinData = await fetchLinkedInData();
+            if (linkedinData) {
+                additionalContext += `\n\nCURRENT LINKEDIN PROFILE DATA (fetched live):\n`;
+                additionalContext += `Headline: ${linkedinData.headline}\n`;
+                additionalContext += `Summary: ${linkedinData.summary}\n`;
+                if (linkedinData.experience.length > 0) {
+                    additionalContext += `Recent Experience:\n`;
+                    linkedinData.experience.slice(0, 3).forEach(exp => {
+                        additionalContext += `- ${exp.title} at ${exp.company}\n`;
+                    });
+                }
+            }
+        }
+
+        if (isResumeQuestion) {
+            const resumeText = await extractResumeText();
+            if (resumeText) {
+                additionalContext += `\n\nRESUME CONTENT (extracted from PDF):\n`;
+                // Extract key sections from resume
+                const sections = resumeText.split(/\n\s*\n/);
+                const relevantSections = sections.filter(section => 
+                    section.toLowerCase().includes('gpa') ||
+                    section.toLowerCase().includes('education') ||
+                    section.toLowerCase().includes('experience') ||
+                    section.toLowerCase().includes('skills') ||
+                    section.toLowerCase().includes('project')
+                );
+                relevantSections.slice(0, 5).forEach(section => {
+                    additionalContext += `${section.trim()}\n\n`;
+                });
+            }
+        }
+
         // Prepare system prompt with live data
         const systemPrompt = `You are Caleb Woldemedhine's AI assistant. Provide concise, accurate answers about Caleb's background and experience.
+
+IMPORTANT: Use the live data provided below when available, as it contains the most current and accurate information from Caleb's resume, LinkedIn, and GitHub profiles.
 
 ABOUT CALEB:
 Caleb Woldemedhine is a junior Computer Science student at University of Denver, concentrating on AI and ML, with minors in Mathematics and Business Information Analytics. He has a GPA of 3.67. He has Software Engineer Intern experience working on AI-focused projects and possesses skills in programming and data analytics.
@@ -2383,8 +2504,10 @@ RESPONSE GUIDELINES:
   * "Tell me more about that" → refer to previously mentioned project/experience
   * "What about his other projects?" → refer to previously discussed projects
   * "Is he good at it?" → refer to previously mentioned skill/technology
+- PRIORITY: Always use the live data provided above when available (GitHub repos, LinkedIn profile, Resume content) as it contains the most current information
 - For GitHub questions, use the live repository information provided above
-- For LinkedIn questions, direct users to https://www.linkedin.com/in/calebwold/ for current information
+- For LinkedIn questions, use the live LinkedIn data provided above
+- For resume/GPA questions, use the live resume content provided above
 - Write in a natural, conversational tone - avoid robotic or overly formal language
 - You can answer simple general questions (weather, basic facts, etc.) but keep responses brief
 - For inappropriate content (porn, violence, illegal activities), respond: "I am a chatbot here to answer questions about Caleb Woldemedhine. I cannot answer questions about [topic]. Please ask me about Caleb's background, experience, or projects instead."
