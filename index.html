@@ -2375,8 +2375,14 @@ Seeking software engineering internship in data analytics, large language models
 
 RESPONSE GUIDELINES:
 - Keep responses concise unless follow-up questions are asked
-- IMPORTANT: Maintain conversation context - reference previous questions and answers when relevant
-- For follow-up questions like "how did he use these" or "tell me more about this", refer back to the previous conversation
+- CRITICAL: Always maintain full conversation context - understand implied references, pronouns, and follow-up questions
+- When users say "these", "that", "it", "he", "his", "this", etc., always refer back to the conversation history to understand what they're referring to
+- For ANY question that seems to reference something previously discussed, check the conversation history for context
+- Examples of contextual understanding:
+  * "How did he use these?" → refer to previously mentioned languages/tools
+  * "Tell me more about that" → refer to previously mentioned project/experience
+  * "What about his other projects?" → refer to previously discussed projects
+  * "Is he good at it?" → refer to previously mentioned skill/technology
 - For GitHub questions, use the live repository information provided above
 - For LinkedIn questions, direct users to https://www.linkedin.com/in/calebwold/ for current information
 - You can answer simple general questions (weather, basic facts, etc.) but keep responses brief
@@ -2388,7 +2394,7 @@ RESPONSE GUIDELINES:
 - If you don't know something specific about Caleb, provide what you do know and suggest contacting Caleb directly${additionalContext}`;
 
         // Build conversation history for context
-        const conversationHistory = messages.slice(-6); // Keep last 6 messages for context
+        const conversationHistory = messages.slice(-10); // Keep last 10 messages for better context
         const messageHistory = conversationHistory.map(msg => ({
             role: msg.role,
             content: msg.content
