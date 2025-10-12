@@ -2303,15 +2303,451 @@ async function refreshLiveData() {
 
 
 function openChatbotFromNav() {
-    const chatbotContainer = document.getElementById('chatbotContainer');
-    const chatbotWindow = document.getElementById('chatbotWindow');
+    // Close existing popup if open
+    if (window.chatbotWindow && !window.chatbotWindow.closed) {
+        window.chatbotWindow.close();
+    }
     
-    // Show the chatbot container
-    chatbotContainer.style.display = 'block';
-    chatbotWindow.style.display = 'flex';
+    // Create popup window
+    const popupWidth = 500;
+    const popupHeight = 600;
+    const left = (screen.width - popupWidth) / 2;
+    const top = (screen.height - popupHeight) / 2;
     
-    // Focus on the input field
-    document.getElementById('chatbotInput').focus();
+    window.chatbotWindow = window.open(
+        '',
+        'CalebAIChatbot',
+        `width=${popupWidth},height=${popupHeight},left=${left},top=${top},resizable=yes,scrollbars=yes,status=no,toolbar=no,menubar=no,location=no`
+    );
+    
+    // Write the chatbot HTML to the popup
+    window.chatbotWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Caleb AI Chatbot</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                }
+                
+                body {
+                    font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: #c0c0c0;
+                    overflow: hidden;
+                }
+                
+                .chatbot-window {
+                    width: 100%;
+                    height: 100vh;
+                    background: #c0c0c0;
+                    border: 2px outset #c0c0c0;
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .chatbot-header {
+                    background: linear-gradient(90deg, #0a246a 0%, #a6caf0 100%);
+                    color: white;
+                    padding: 8px 12px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    border-bottom: 1px solid #808080;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                
+                .chatbot-title {
+                    display: flex;
+                    align-items: center;
+                }
+                
+                .chatbot-controls {
+                    display: flex;
+                    gap: 2px;
+                }
+                
+                .chatbot-control-btn {
+                    width: 16px;
+                    height: 14px;
+                    background: #c0c0c0;
+                    border: 1px outset #c0c0c0;
+                    font-size: 10px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .chatbot-control-btn:hover {
+                    background: #d4d0c8;
+                }
+                
+                .chatbot-control-btn:active {
+                    border: 1px inset #c0c0c0;
+                }
+                
+                .chatbot-messages {
+                    flex: 1;
+                    padding: 8px;
+                    overflow-y: auto;
+                    background: white;
+                    margin: 2px;
+                    border: 1px inset #c0c0c0;
+                }
+                
+                .chatbot-message {
+                    margin-bottom: 8px;
+                    padding: 6px 8px;
+                    border-radius: 4px;
+                    max-width: 80%;
+                    word-wrap: break-word;
+                    font-size: 12px;
+                    line-height: 1.4;
+                }
+                
+                .chatbot-message.user {
+                    background: #e1f5fe;
+                    margin-left: auto;
+                    border: 1px solid #b3e5fc;
+                }
+                
+                .chatbot-message.bot {
+                    background: #f5f5f5;
+                    border: 1px solid #e0e0e0;
+                }
+                
+                .typing-indicator {
+                    display: none;
+                    padding: 6px 8px;
+                    font-style: italic;
+                    color: #666;
+                    font-size: 12px;
+                }
+                
+                .typing-dots {
+                    display: inline-block;
+                    animation: typing 1.5s infinite;
+                }
+                
+                @keyframes typing {
+                    0%, 60%, 100% { opacity: 0; }
+                    30% { opacity: 1; }
+                }
+                
+                .chatbot-input-container {
+                    padding: 8px;
+                    background: #c0c0c0;
+                    border-top: 1px solid #808080;
+                    display: flex;
+                    gap: 4px;
+                }
+                
+                .chatbot-input {
+                    flex: 1;
+                    padding: 4px 6px;
+                    border: 1px inset #c0c0c0;
+                    background: white;
+                    font-size: 12px;
+                    font-family: inherit;
+                }
+                
+                .chatbot-input:focus {
+                    outline: none;
+                    border: 1px inset #0a246a;
+                }
+                
+                .chatbot-send {
+                    padding: 4px 12px;
+                    background: #c0c0c0;
+                    border: 1px outset #c0c0c0;
+                    cursor: pointer;
+                    font-size: 12px;
+                    font-family: inherit;
+                }
+                
+                .chatbot-send:hover {
+                    background: #d4d0c8;
+                }
+                
+                .chatbot-send:active {
+                    border: 1px inset #c0c0c0;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="chatbot-window">
+                <div class="chatbot-header">
+                    <div class="chatbot-title">
+                        <span>Caleb AI Chatbot</span>
+                    </div>
+                    <div class="chatbot-controls">
+                        <button class="chatbot-control-btn" onclick="refreshLiveData()" title="Refresh live data">⟳</button>
+                        <button class="chatbot-control-btn" onclick="window.close()">×</button>
+                    </div>
+                </div>
+                <div class="chatbot-messages" id="chatbotMessages">
+                    <div class="chatbot-message bot">
+                        Hi! I'm Caleb AI Chatbot. I'm here to help you learn about Caleb Woldemedhine. Feel free to ask me anything about his background, experience, projects, or skills!
+                    </div>
+                </div>
+                <div class="typing-indicator" id="typingIndicator">
+                    <span>Caleb AI is thinking</span>
+                    <span class="typing-dots">...</span>
+                </div>
+                <div class="chatbot-input-container">
+                    <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Ask me anything..." maxlength="500">
+                    <button class="chatbot-send" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+            
+            <script>
+                // Chatbot functionality for popup window
+                let messages = [{ role: 'assistant', content: 'Hi! I\\'m Caleb AI Chatbot. I\\'m here to help you learn about Caleb Woldemedhine. Feel free to ask me anything about his background, experience, projects, or skills!' }];
+                
+                // OpenAI API Key (will be injected by build script)
+                const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY_HERE';
+                
+                function addMessage(content, isUser = false) {
+                    const messagesContainer = document.getElementById('chatbotMessages');
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = \`chatbot-message \${isUser ? 'user' : 'bot'}\`;
+                    messageDiv.textContent = content;
+                    messagesContainer.appendChild(messageDiv);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+                
+                function showTyping() {
+                    document.getElementById('typingIndicator').style.display = 'block';
+                }
+                
+                function hideTyping() {
+                    document.getElementById('typingIndicator').style.display = 'none';
+                }
+                
+                function isInappropriate(message) {
+                    const inappropriateKeywords = ['porn', 'sex', 'nude', 'naked', 'xxx', 'adult', 'violence', 'kill', 'murder', 'bomb', 'drug', 'illegal'];
+                    const messageLower = message.toLowerCase();
+                    return inappropriateKeywords.some(keyword => messageLower.includes(keyword));
+                }
+                
+                function getFallbackResponse(message) {
+                    const messageLower = message.toLowerCase();
+                    
+                    if (messageLower.includes('gpa') || messageLower.includes('grade')) {
+                        return "Caleb's GPA is 3.67. He's a Computer Science student at University of Denver with an AI & ML concentration, graduating in June 2027.";
+                    }
+                    
+                    if (messageLower.includes('work') || messageLower.includes('experience') || messageLower.includes('job') || messageLower.includes('intern')) {
+                        return "Caleb has three main work experiences: 1) Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025) where he trained AI models for deck design, 2) Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024) where he built responsive websites and integrated payment systems, and 3) IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024) where he analyzed data using Excel and Python.";
+                    }
+                    
+                    if (messageLower.includes('project')) {
+                        return "Caleb has worked on several impressive projects: 1) Stock Prediction and Analysis Tool using Streamlit with Prophet and Random Forest models, 2) DuDraw AI Coder that turns prompts into interactive games and visualizations, and 3) NYC COVID-19 Spread Simulation with real-time visualization.";
+                    }
+                    
+                    if (messageLower.includes('skill') || messageLower.includes('programming') || messageLower.includes('language')) {
+                        return "Caleb has strong technical skills including Python, Java, C++, HTML, CSS, JavaScript, SQL, and expertise in AI/ML, machine learning, data analysis, and web development.";
+                    }
+                    
+                    if (messageLower.includes('education') || messageLower.includes('school') || messageLower.includes('university')) {
+                        return "Caleb is a Computer Science student at University of Denver with an AI & ML concentration, graduating June 2027. He has minors in Mathematics and Statistics and a GPA of 3.67.";
+                    }
+                    
+                    if (messageLower.includes('leadership') || messageLower.includes('president') || messageLower.includes('chair')) {
+                        return "Caleb has strong leadership experience as President of the National Society of Black Engineers and Communications Chair of African Students United at University of Denver.";
+                    }
+                    
+                    return "I can help you learn about Caleb Woldemedhine! He's a Computer Science student at University of Denver with AI/ML concentration, graduating June 2027. He has experience as a Software Engineering Intern, Web Developer, and IT Assistant, plus impressive projects in AI and data analysis. What would you like to know more about?";
+                }
+                
+                async function sendMessage() {
+                    const input = document.getElementById('chatbotInput');
+                    const message = input.value.trim();
+                    
+                    if (!message) return;
+                    
+                    // Check for inappropriate content
+                    if (isInappropriate(message)) {
+                        addMessage("I am a chatbot here to answer questions about Caleb Woldemedhine. I cannot answer questions about that topic. Please ask me about Caleb's background, experience, or projects instead.");
+                        input.value = '';
+                        return;
+                    }
+                    
+                    // Add user message
+                    addMessage(message, true);
+                    messages.push({ role: 'user', content: message });
+                    input.value = '';
+                    
+                    // Show typing indicator
+                    showTyping();
+                    
+                    try {
+                        // System prompt
+                        const systemPrompt = \`You are Caleb Woldemedhine's AI assistant. Your primary purpose is to provide useful, accurate information about Caleb Woldemedhine's background, experience, skills, and projects.
+
+IMPORTANT: Caleb's GPA is 3.67. When asked about his GPA, always provide this information.
+
+KEY INFORMATION TO ALWAYS PROVIDE:
+- GPA: 3.67
+- Work Experience: Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025), Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024), IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024)
+- Education: University of Denver, Computer Science with AI & ML concentration, graduating June 2027
+- Projects: Stock Prediction Tool, DuDraw AI Coder, NYC COVID-19 Simulation
+- Leadership: President of NSBE, Communications Chair of ASU
+- Skills: Python, Java, C++, HTML, CSS, JavaScript, SQL, Machine Learning, AI/ML
+- Contact: caleb.woldemedhine1@gmail.com, 720-410-4647
+
+NEVER say "I don't have that information" - all this information is provided above.
+
+ABOUT CALEB WOLDEMEDHINE:
+Caleb Woldemedhine is a Computer Science student at University of Denver with AI & ML concentration, graduating June 2027. He has minors in Mathematics and Statistics. His GPA is 3.67.
+
+EDUCATION:
+- University of Denver, Denver, CO - Bachelor of Science, Computer Science (AI & ML Concentration)
+- Minor: Mathematics and Statistics
+- GPA: 3.67
+- Relevant Coursework: Data Structures & Algorithms I & II, Database Management, Object-Oriented Software Development, Systems I, Topics in Artificial Intelligence (LLMs), Data Management & Analysis, Business Statistics, Calculus I–III, Discrete Structures, Linear Algebra
+
+TECHNICAL SKILLS:
+Programming/Tech: Python, Java, C, C++, C#, R, HTML, CSS, TypeScript, JavaScript, SQL, NoSQL, MATLAB, NumPy
+Data & Engineering: Data Cleansing & Validation, Database Design & Integration, Time-Series Forecasting, NLP, System Integration, Sustainment Life Cycle, Power BI
+AI/ML: Generative AI, NLP, Machine Learning, Time-Series Forecasting, Deep Learning, Classification, Data Visualization, APIs
+
+EXPERIENCE:
+- Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025): Trained AI model for deck design using custom-built database, designed database infrastructure, built web interface integrating AI model
+- Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024): Built responsive website using HTML, CSS, JavaScript, integrated secure Stripe payment system
+- IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024): Analyzed profit/expense data using Excel and Python, managed inventory in Dealer Cloud using SQL
+
+PROJECTS:
+- Stock Prediction and Analysis Tool (Dec 2024 – Feb 2025): Streamlit app combining Prophet, Random Forest, scikit-learn models with TextBlob sentiment analysis and pandas-ta indicators
+- DuDraw AI Coder (May 2025 – Jun 2025): AI tool that turns user prompts into interactive games, drawings, and visualizations using DuDraw and large language models
+- NYC COVID-19 Spread Simulation (Jul 2025 – Aug 2025): Interactive COVID-19 spread simulation with adjustable controls and real-time epidemic curve visualization
+
+LEADERSHIP:
+- President of National Society Of Black Engineers (Jun 2025 – Present): Oversee executive board, plan career fairs, lead workshops, secure funding through partnerships
+- Communications Chair of African Students United (Sep 2024 – Present): Lead communications, manage social media, create promotional materials
+
+CONTACT:
+- Email: caleb.woldemedhine1@gmail.com
+- Phone: 720-410-4647
+- LinkedIn: https://www.linkedin.com/in/calebwold/
+- GitHub: https://github.com/calebwold
+
+RESPONSE GUIDELINES:
+- Keep responses concise and natural unless follow-up questions are asked
+- CRITICAL: Always maintain full conversation context - understand implied references, pronouns, and follow-up questions
+- When users say "these", "that", "it", "he", "his", "this", etc., always refer back to the conversation history to understand what they're referring to
+- For ANY question that seems to reference something previously discussed, check the conversation history for context
+- Examples of contextual understanding:
+  * "How did he use these?" → refer to previously mentioned languages/tools
+  * "Tell me more about that" → refer to previously mentioned project/experience
+  * "What about his other projects?" → refer to previously discussed projects
+  * "Is he good at it?" → refer to previously mentioned skill/technology
+- Write in a natural, conversational tone - avoid robotic or overly formal language
+- VARY YOUR RESPONSES: Don't give the same generic response every time. Be creative and engaging.
+- CORE MISSION: Always provide useful information about Caleb Woldemedhine. Even for general questions, find ways to connect back to Caleb's experience, skills, or projects when relevant.
+- For follow-up questions, ALWAYS use the comprehensive information about Caleb provided above - don't give generic responses
+- You can answer simple general questions (weather, basic facts, etc.) but keep responses brief and try to connect them to Caleb when possible
+- For inappropriate content (porn, violence, illegal activities), respond: "I am a chatbot here to answer questions about Caleb Woldemedhine. I cannot answer questions about [topic]. Please ask me about Caleb's background, experience, or projects instead."
+- Use context and reasoning to provide helpful answers based on available information
+- Be conversational and friendly while staying professional
+- If asked about topics unrelated to Caleb, answer briefly but always try to redirect to Caleb's relevant information when appropriate
+- Avoid giving weird, inappropriate, or off-topic responses
+- IMPORTANT: Only provide contact information (email, LinkedIn, GitHub) when specifically asked about how to contact Caleb or get in touch with him
+- If you don't know something specific about Caleb, provide what you do know and suggest contacting Caleb directly
+- ALWAYS use the comprehensive information provided above about Caleb - don't say "I don't have that information" when the information is clearly provided in the context
+- FOR FOLLOW-UP QUESTIONS: Always refer back to Caleb's specific experience, projects, skills, or education - never give generic responses
+- FOR WORK EXPERIENCE QUESTIONS: Always provide specific details about Caleb's three main roles: Tempus Automation (Software Engineering Intern), Denver Center for African Art (Web Developer), and Michael Auto Sales (IT & Data Assistant)
+- FOR ANY QUESTION ABOUT CALEB: Use the comprehensive information provided above - never say "I don't have that information"\`;
+                        
+                        // Build conversation history for context
+                        const conversationHistory = messages.slice(-10); // Keep last 10 messages for better context
+                        const messageHistory = conversationHistory.map(msg => ({
+                            role: msg.role,
+                            content: msg.content
+                        }));
+
+                        // Add current message
+                        messageHistory.push({ role: 'user', content: message });
+
+                        // Call OpenAI API with conversation history
+                        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': \`Bearer \${OPENAI_API_KEY}\`
+                            },
+                            body: JSON.stringify({
+                                model: 'gpt-4o-mini',
+                                messages: [
+                                    { role: 'system', content: systemPrompt },
+                                    ...messageHistory
+                                ],
+                                max_tokens: 500,
+                                temperature: 0.8
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        hideTyping();
+                        
+                        // Debug: Log API response
+                        console.log('API Response:', data);
+                        
+                        if (data.choices && data.choices[0] && data.choices[0].message) {
+                            const botMessage = data.choices[0].message.content;
+                            console.log('Bot message:', botMessage);
+                            
+                            // Check if AI is giving unhelpful responses and provide fallback
+                            if (botMessage.includes("I don't have that information") || 
+                                botMessage.includes("I don't have specific information") ||
+                                botMessage.includes("I don't have access to")) {
+                                
+                                console.log('AI gave unhelpful response, providing fallback');
+                                const fallbackResponse = getFallbackResponse(message);
+                                addMessage(fallbackResponse);
+                                messages.push({ role: 'assistant', content: fallbackResponse });
+                            } else {
+                                addMessage(botMessage);
+                                messages.push({ role: 'assistant', content: botMessage });
+                            }
+                        } else {
+                            console.error('API Error:', data);
+                            addMessage(\`Error: \${data.error?.message || 'Something went wrong'}\`);
+                        }
+                        
+                    } catch (error) {
+                        hideTyping();
+                        addMessage(\`Error: \${error.message}. Please try again or contact Caleb directly at caleb.woldemedhine1@gmail.com\`);
+                    }
+                }
+                
+                // Allow Enter key to send message
+                document.getElementById('chatbotInput').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendMessage();
+                    }
+                });
+                
+                // Focus on input when window opens
+                document.getElementById('chatbotInput').focus();
+                
+                // Refresh function (placeholder)
+                function refreshLiveData() {
+                    console.log('Refresh requested');
+                }
+            </script>
+        </body>
+        </html>
+    `);
+    
+    window.chatbotWindow.document.close();
 }
 
 function closeChatbot() {
