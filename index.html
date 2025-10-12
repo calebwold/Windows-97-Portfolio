@@ -2177,6 +2177,7 @@
                         <span>Ask About Caleb - AI Chatbot</span>
                     </div>
             <div class="chatbot-controls">
+                <button class="chatbot-control-btn" onclick="refreshLiveData()" title="Refresh live data">⟳</button>
                 <button class="chatbot-control-btn" onclick="minimizeChatbot()">_</button>
                 <button class="chatbot-control-btn" onclick="closeChatbot()">×</button>
             </div>
@@ -2216,6 +2217,58 @@
 // API key will be injected by Netlify during build
 const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY_HERE';
 let messages = [];
+
+// Live data cache - automatically updates from LinkedIn and GitHub
+let liveDataCache = {
+    linkedin: null,
+    github: null,
+    resume: null,
+    lastUpdated: null,
+    cacheExpiry: 30 * 60 * 1000 // 30 minutes
+};
+
+// Initialize live data fetching on page load
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Initializing live data cache...');
+    await refreshLiveData();
+    
+    // Set up periodic refresh every 30 minutes
+    setInterval(refreshLiveData, 30 * 60 * 1000);
+});
+
+// Function to refresh all live data
+async function refreshLiveData() {
+    console.log('Refreshing live data cache...');
+    
+    try {
+        // Fetch GitHub data
+        const githubData = await fetchGitHubRepos();
+        if (githubData && githubData.length > 0) {
+            liveDataCache.github = githubData;
+            console.log('GitHub data refreshed:', githubData.length, 'repos');
+        }
+        
+        // Fetch LinkedIn data
+        const linkedinData = await fetchLinkedInData();
+        if (linkedinData) {
+            liveDataCache.linkedin = linkedinData;
+            console.log('LinkedIn data refreshed');
+        }
+        
+        // Extract resume data
+        const resumeData = await extractResumeText();
+        if (resumeData) {
+            liveDataCache.resume = resumeData;
+            console.log('Resume data refreshed');
+        }
+        
+        liveDataCache.lastUpdated = new Date();
+        console.log('Live data cache updated at:', liveDataCache.lastUpdated);
+        
+    } catch (error) {
+        console.error('Error refreshing live data:', error);
+    }
+}
 
 
 function openChatbotFromNav() {
@@ -2457,48 +2510,29 @@ Skills: Python, JavaScript, React, Machine Learning, Data Analytics`;
 
         let additionalContext = '';
         
-        // Fetch dynamic data based on question type
-        if (isGitHubQuestion) {
-            const repos = await fetchGitHubRepos();
-            if (repos.length > 0) {
-                additionalContext += `\n\nCURRENT GITHUB REPOSITORIES (fetched live):\n`;
-                repos.slice(0, 10).forEach(repo => {
-                    additionalContext += `- ${repo.name}: ${repo.description || 'No description'} (${repo.language || 'Various languages'}) - ${repo.stars} stars\n`;
+        // Use cached live data (automatically refreshed every 30 minutes)
+        if (isGitHubQuestion && liveDataCache.github) {
+            additionalContext += `\n\nCURRENT GITHUB REPOSITORIES (live data, updated ${liveDataCache.lastUpdated ? liveDataCache.lastUpdated.toLocaleTimeString() : 'recently'}):\n`;
+            liveDataCache.github.slice(0, 10).forEach(repo => {
+                additionalContext += `- ${repo.name}: ${repo.description || 'No description'} (${repo.language || 'Various languages'}) - ${repo.stars} stars\n`;
+            });
+        }
+
+        if (isLinkedInQuestion && liveDataCache.linkedin) {
+            additionalContext += `\n\nCURRENT LINKEDIN PROFILE DATA (live data, updated ${liveDataCache.lastUpdated ? liveDataCache.lastUpdated.toLocaleTimeString() : 'recently'}):\n`;
+            additionalContext += `Headline: ${liveDataCache.linkedin.headline}\n`;
+            additionalContext += `Summary: ${liveDataCache.linkedin.summary}\n`;
+            if (liveDataCache.linkedin.experience.length > 0) {
+                additionalContext += `Recent Experience:\n`;
+                liveDataCache.linkedin.experience.slice(0, 3).forEach(exp => {
+                    additionalContext += `- ${exp.title} at ${exp.company}\n`;
                 });
             }
         }
 
-        if (isLinkedInQuestion) {
-            console.log('Fetching LinkedIn data...');
-            const linkedinData = await fetchLinkedInData();
-            if (linkedinData) {
-                console.log('LinkedIn data fetched:', linkedinData);
-                additionalContext += `\n\nCURRENT LINKEDIN PROFILE DATA (fetched live):\n`;
-                additionalContext += `Headline: ${linkedinData.headline}\n`;
-                additionalContext += `Summary: ${linkedinData.summary}\n`;
-                if (linkedinData.experience.length > 0) {
-                    additionalContext += `Recent Experience:\n`;
-                    linkedinData.experience.slice(0, 3).forEach(exp => {
-                        additionalContext += `- ${exp.title} at ${exp.company}\n`;
-                    });
-                }
-            } else {
-                console.log('Failed to fetch LinkedIn data');
-            }
-        }
-
-        if (isResumeQuestion) {
-            console.log('Fetching resume data...');
-            const resumeText = await extractResumeText();
-            if (resumeText) {
-                console.log('Resume text extracted:', resumeText.substring(0, 200) + '...');
-                additionalContext += `\n\nRESUME CONTENT (extracted from PDF):\n`;
-                additionalContext += `${resumeText}\n\n`;
-            } else {
-                console.log('Failed to extract resume text');
-                // If PDF extraction fails, try to provide some basic info
-                additionalContext += `\n\nNote: Could not extract resume PDF content. Using fallback information.\n`;
-            }
+        if (isResumeQuestion && liveDataCache.resume) {
+            additionalContext += `\n\nRESUME CONTENT (live data, updated ${liveDataCache.lastUpdated ? liveDataCache.lastUpdated.toLocaleTimeString() : 'recently'}):\n`;
+            additionalContext += `${liveDataCache.resume}\n\n`;
         }
 
         // Prepare system prompt with live data
