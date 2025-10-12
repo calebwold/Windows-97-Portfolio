@@ -2248,11 +2248,31 @@ function hideTyping() {
     document.getElementById('typingIndicator').style.display = 'none';
 }
 
+// Safety filter for inappropriate content
+function isInappropriate(message) {
+    const inappropriateKeywords = [
+        'porn', 'xxx', 'adult', 'sex', 'nude', 'naked',
+        'bomb', 'explosive', 'kill', 'murder', 'violence',
+        'drugs', 'illegal', 'hack', 'steal', 'fraud',
+        'redtube', 'pornhub', 'xhamster', 'xvideos'
+    ];
+    
+    const messageLower = message.toLowerCase();
+    return inappropriateKeywords.some(keyword => messageLower.includes(keyword));
+}
+
 async function sendMessage() {
     const input = document.getElementById('chatbotInput');
     const message = input.value.trim();
     
     if (!message) return;
+    
+    // Check for inappropriate content
+    if (isInappropriate(message)) {
+        addMessage("I am a chatbot here to answer questions about Caleb Woldemedhine. I cannot answer questions about that topic. Please ask me about Caleb's background, experience, or projects instead.");
+        input.value = '';
+        return;
+    }
     
     // Add user message
     addMessage(message, true);
@@ -2267,7 +2287,7 @@ async function sendMessage() {
         const systemPrompt = `You are Caleb Woldemedhine's AI assistant. Provide concise, accurate answers about Caleb's background and experience.
 
 ABOUT CALEB:
-Caleb Woldemedhine is a junior Computer Science student at University of Denver, concentrating on AI and ML, with minors in Mathematics and Business Information Analytics. He has Software Engineer Intern experience working on AI-focused projects and possesses skills in programming and data analytics.
+Caleb Woldemedhine is a junior Computer Science student at University of Denver, concentrating on AI and ML, with minors in Mathematics and Business Information Analytics. He has a GPA of 3.67. He has Software Engineer Intern experience working on AI-focused projects and possesses skills in programming and data analytics.
 
 CONTACT:
 - Email: caleb.woldemedhine1@gmail.com
@@ -2295,12 +2315,13 @@ Seeking software engineering internship in data analytics, large language models
 RESPONSE GUIDELINES:
 - Keep responses concise unless follow-up questions are asked
 - For LinkedIn/GitHub questions, provide the specific links above
-- For GPA or specific resume details, say "I don't have that specific information - you can contact Caleb directly at caleb.woldemedhine1@gmail.com"
+- You can answer simple general questions (weather, basic facts, etc.) but keep responses brief
+- For inappropriate content (porn, violence, illegal activities), respond: "I am a chatbot here to answer questions about Caleb Woldemedhine. I cannot answer questions about [topic]. Please ask me about Caleb's background, experience, or projects instead."
 - Use context and reasoning to provide helpful answers based on available information
 - Be conversational and friendly while staying professional
-- If asked about unrelated topics, politely redirect to Caleb's information
+- If asked about topics unrelated to Caleb, you can answer simple questions but redirect to Caleb's information when appropriate
 - Avoid giving weird, inappropriate, or off-topic responses
-- If you don't know something specific, provide what you do know and suggest contacting Caleb directly`;
+- If you don't know something specific about Caleb, provide what you do know and suggest contacting Caleb directly`;
 
         const userPrompt = `User: ${message}`;
         
