@@ -2236,6 +2236,37 @@ document.addEventListener('DOMContentLoaded', async function() {
     setInterval(refreshLiveData, 30 * 60 * 1000);
 });
 
+// Function to provide fallback responses when AI gives unhelpful answers
+function getFallbackResponse(message) {
+    const messageLower = message.toLowerCase();
+    
+    if (messageLower.includes('gpa') || messageLower.includes('grade')) {
+        return "Caleb's GPA is 3.67. He's a Computer Science student at University of Denver with an AI & ML concentration, graduating in June 2027.";
+    }
+    
+    if (messageLower.includes('work') || messageLower.includes('experience') || messageLower.includes('job') || messageLower.includes('intern')) {
+        return "Caleb has three main work experiences: 1) Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025) where he trained AI models for deck design, 2) Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024) where he built responsive websites and integrated payment systems, and 3) IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024) where he analyzed data using Excel and Python.";
+    }
+    
+    if (messageLower.includes('project')) {
+        return "Caleb has worked on several impressive projects: 1) Stock Prediction and Analysis Tool using Streamlit with Prophet and Random Forest models, 2) DuDraw AI Coder that turns prompts into interactive games and visualizations, and 3) NYC COVID-19 Spread Simulation with real-time visualization.";
+    }
+    
+    if (messageLower.includes('skill') || messageLower.includes('programming') || messageLower.includes('language')) {
+        return "Caleb has strong technical skills including Python, Java, C++, HTML, CSS, JavaScript, SQL, and expertise in AI/ML, machine learning, data analysis, and web development.";
+    }
+    
+    if (messageLower.includes('education') || messageLower.includes('school') || messageLower.includes('university')) {
+        return "Caleb is a Computer Science student at University of Denver with an AI & ML concentration, graduating June 2027. He has minors in Mathematics and Statistics and a GPA of 3.67.";
+    }
+    
+    if (messageLower.includes('leadership') || messageLower.includes('president') || messageLower.includes('chair')) {
+        return "Caleb has strong leadership experience as President of the National Society of Black Engineers and Communications Chair of African Students United at University of Denver.";
+    }
+    
+    return "I can help you learn about Caleb Woldemedhine! He's a Computer Science student at University of Denver with AI/ML concentration, graduating June 2027. He has experience as a Software Engineering Intern, Web Developer, and IT Assistant, plus impressive projects in AI and data analysis. What would you like to know more about?";
+}
+
 // Function to refresh all live data
 async function refreshLiveData() {
     console.log('Refreshing live data cache...');
@@ -2543,6 +2574,17 @@ Skills: Python, Java, C++, HTML, CSS, JavaScript, SQL, Machine Learning`;
 
 IMPORTANT: Caleb's GPA is 3.67. When asked about his GPA, always provide this information.
 
+KEY INFORMATION TO ALWAYS PROVIDE:
+- GPA: 3.67
+- Work Experience: Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025), Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024), IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024)
+- Education: University of Denver, Computer Science with AI & ML concentration, graduating June 2027
+- Projects: Stock Prediction Tool, DuDraw AI Coder, NYC COVID-19 Simulation
+- Leadership: President of NSBE, Communications Chair of ASU
+- Skills: Python, Java, C++, HTML, CSS, JavaScript, SQL, Machine Learning, AI/ML
+- Contact: caleb.woldemedhine1@gmail.com, 720-410-4647
+
+NEVER say "I don't have that information" - all this information is provided above.
+
 CRITICAL INSTRUCTION: The live data provided below contains the most current and accurate information from Caleb's resume, LinkedIn, and GitHub profiles. ALWAYS use this live data when available instead of any fallback information.
 
 CORE MISSION: Always provide valuable information about Caleb. Even for general questions, find relevant connections to Caleb's experience, skills, or projects. For follow-up questions, always refer to specific details about Caleb rather than giving generic responses.
@@ -2608,7 +2650,9 @@ RESPONSE GUIDELINES:
 - IMPORTANT: Only provide contact information (email, LinkedIn, GitHub) when specifically asked about how to contact Caleb or get in touch with him
 - If you don't know something specific about Caleb, provide what you do know and suggest contacting Caleb directly
 - ALWAYS use the comprehensive information provided above about Caleb - don't say "I don't have that information" when the information is clearly provided in the context
-- FOR FOLLOW-UP QUESTIONS: Always refer back to Caleb's specific experience, projects, skills, or education - never give generic responses${additionalContext}`;
+- FOR FOLLOW-UP QUESTIONS: Always refer back to Caleb's specific experience, projects, skills, or education - never give generic responses
+- FOR WORK EXPERIENCE QUESTIONS: Always provide specific details about Caleb's three main roles: Tempus Automation (Software Engineering Intern), Denver Center for African Art (Web Developer), and Michael Auto Sales (IT & Data Assistant)
+- FOR ANY QUESTION ABOUT CALEB: Use the comprehensive information provided above - never say "I don't have that information"${additionalContext}`;
 
         // Build conversation history for context
         const conversationHistory = messages.slice(-10); // Keep last 10 messages for better context
@@ -2652,8 +2696,20 @@ RESPONSE GUIDELINES:
         if (data.choices && data.choices[0] && data.choices[0].message) {
             const botMessage = data.choices[0].message.content;
             console.log('Bot message:', botMessage);
-            addMessage(botMessage);
-            messages.push({ role: 'assistant', content: botMessage });
+            
+            // Check if AI is giving unhelpful responses and provide fallback
+            if (botMessage.includes("I don't have that information") || 
+                botMessage.includes("I don't have specific information") ||
+                botMessage.includes("I don't have access to")) {
+                
+                console.log('AI gave unhelpful response, providing fallback');
+                const fallbackResponse = getFallbackResponse(message);
+                addMessage(fallbackResponse);
+                messages.push({ role: 'assistant', content: fallbackResponse });
+            } else {
+                addMessage(botMessage);
+                messages.push({ role: 'assistant', content: botMessage });
+            }
         } else {
             console.error('API Error:', data);
             addMessage(`Error: ${data.error?.message || 'Something went wrong'}`);
