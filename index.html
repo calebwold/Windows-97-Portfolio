@@ -2226,109 +2226,257 @@
 
 <!-- AI Assistant functionality with RAG + OpenAI -->
 <script>
-// API key will be injected by Netlify during build
+// API key - Replace with your actual OpenAI API key
 const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY_HERE';
-let messages = [];
 
-// Live data cache - automatically updates from LinkedIn and GitHub
-let liveDataCache = {
-    linkedin: null,
-    github: null,
-    resume: null,
-    lastUpdated: null,
-    cacheExpiry: 30 * 60 * 1000 // 30 minutes
+// Enhanced conversation state management
+let conversationState = {
+    messages: [],
+    userContext: {
+        askedAbout: new Set(),
+        lastTopic: null,
+        conversationDepth: 0
+    },
+    liveData: {
+        github: null,
+        linkedin: null,
+        resume: null,
+        lastUpdated: null,
+        cacheExpiry: 30 * 60 * 1000 // 30 minutes
+    }
 };
 
-// Initialize live data fetching on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('Initializing live data cache...');
+    console.log('Initializing Caleb AI Chatbot...');
+    
+    // Load live data
     await refreshLiveData();
     
     // Set up periodic refresh every 30 minutes
     setInterval(refreshLiveData, 30 * 60 * 1000);
+    
+    // Set up Enter key for input
+    const input = document.getElementById('chatbotInput');
+    if (input) {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
+    
+    console.log('Chatbot initialized successfully');
 });
 
-// Function to provide fallback responses when AI gives unhelpful answers
-function getFallbackResponse(message) {
-    const messageLower = message.toLowerCase();
-    
-    if (messageLower.includes('gpa') || messageLower.includes('grade')) {
-        return "Caleb's GPA is 3.67. He's a Computer Science student at University of Denver with an AI & ML concentration, graduating in June 2027.";
-    }
-    
-    if (messageLower.includes('work') || messageLower.includes('experience') || messageLower.includes('job') || messageLower.includes('intern')) {
-        return "Caleb has three main work experiences: 1) Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025) where he trained AI models for deck design, 2) Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024) where he built responsive websites and integrated payment systems, and 3) IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024) where he analyzed data using Excel and Python.";
-    }
-    
-    if (messageLower.includes('project')) {
-        return "Caleb has worked on several impressive projects: 1) Stock Prediction and Analysis Tool using Streamlit with Prophet and Random Forest models, 2) DuDraw AI Coder that turns prompts into interactive games and visualizations, and 3) NYC COVID-19 Spread Simulation with real-time visualization.";
-    }
-    
-    if (messageLower.includes('skill') || messageLower.includes('programming') || messageLower.includes('language')) {
-        return "Caleb has strong technical skills including Python, Java, C++, HTML, CSS, JavaScript, SQL, and expertise in AI/ML, machine learning, data analysis, and web development.";
-    }
-    
-    if (messageLower.includes('education') || messageLower.includes('school') || messageLower.includes('university')) {
-        return "Caleb is a Computer Science student at University of Denver with an AI & ML concentration, graduating June 2027. He has minors in Mathematics and Statistics and a GPA of 3.67.";
-    }
-    
-    if (messageLower.includes('leadership') || messageLower.includes('president') || messageLower.includes('chair')) {
-        return "Caleb has strong leadership experience as President of the National Society of Black Engineers and Communications Chair of African Students United at University of Denver.";
-    }
-    
-    return "I can help you learn about Caleb Woldemedhine! He's a Computer Science student at University of Denver with AI/ML concentration, graduating June 2027. He has experience as a Software Engineering Intern, Web Developer, and IT Assistant, plus impressive projects in AI and data analysis. What would you like to know more about?";
-}
-
-// Function to refresh all live data
+// Enhanced live data fetching with better error handling
 async function refreshLiveData() {
-    console.log('Refreshing live data cache...');
+    console.log('Refreshing live data...');
+    
+    const fetchPromises = [
+        fetchGitHubRepos().catch(err => {
+            console.warn('GitHub fetch failed:', err.message);
+            return null;
+        }),
+        fetchLinkedInData().catch(err => {
+            console.warn('LinkedIn fetch failed:', err.message);
+            return null;
+        }),
+        extractResumeText().catch(err => {
+            console.warn('Resume fetch failed:', err.message);
+            return null;
+        })
+    ];
     
     try {
-        // Fetch GitHub data
-        const githubData = await fetchGitHubRepos();
-        if (githubData && githubData.length > 0) {
-            liveDataCache.github = githubData;
-            console.log('GitHub data refreshed:', githubData.length, 'repos');
+        const [github, linkedin, resume] = await Promise.all(fetchPromises);
+        
+        if (github) {
+            conversationState.liveData.github = github;
+            console.log('GitHub data loaded:', github.length, 'repos');
         }
         
-        // Fetch LinkedIn data
-        const linkedinData = await fetchLinkedInData();
-        if (linkedinData) {
-            liveDataCache.linkedin = linkedinData;
-            console.log('LinkedIn data refreshed');
+        if (linkedin) {
+            conversationState.liveData.linkedin = linkedin;
+            console.log('LinkedIn data loaded');
         }
         
-        // Extract resume data
-        const resumeData = await extractResumeText();
-        if (resumeData) {
-            liveDataCache.resume = resumeData;
-            console.log('Resume data refreshed');
+        if (resume) {
+            conversationState.liveData.resume = resume;
+            console.log('Resume data loaded');
         }
         
-        liveDataCache.lastUpdated = new Date();
-        console.log('Live data cache updated at:', liveDataCache.lastUpdated);
+        conversationState.liveData.lastUpdated = new Date();
+        console.log('Live data refresh complete');
         
+        return true;
     } catch (error) {
         console.error('Error refreshing live data:', error);
+        return false;
     }
 }
 
+// Enhanced GitHub fetching
+async function fetchGitHubRepos() {
+    const response = await fetch('https://api.github.com/users/calebwold/repos?sort=updated&per_page=20', {
+        headers: {
+            'Accept': 'application/vnd.github.v3+json'
+        }
+    });
+    
+    if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status}`);
+    }
+    
+    const repos = await response.json();
+    return repos.map(repo => ({
+        name: repo.name,
+        description: repo.description || 'No description',
+        language: repo.language || 'Multiple languages',
+        stars: repo.stargazers_count,
+        forks: repo.forks_count,
+        url: repo.html_url,
+        updated: new Date(repo.updated_at).toLocaleDateString()
+    }));
+}
 
+// Enhanced LinkedIn fetching with fallback
+async function fetchLinkedInData() {
+    try {
+        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+        const linkedinUrl = 'https://www.linkedin.com/in/calebwold/';
+        
+        const response = await fetch(proxyUrl + encodeURIComponent(linkedinUrl), {
+            timeout: 5000
+        });
+        
+        if (!response.ok) throw new Error('LinkedIn fetch failed');
+        
+        const html = await response.text();
+        
+        return {
+            headline: extractInfo(/<title>([^<]+)/i, html) || 'Computer Science Student at University of Denver',
+            summary: extractInfo(/<meta name="description" content="([^"]+)"/i, html) || 'AI/ML enthusiast with software engineering experience',
+            profileUrl: linkedinUrl
+        };
+    } catch (error) {
+        // Return fallback data if fetch fails
+        return {
+            headline: 'Computer Science Student at University of Denver',
+            summary: 'AI/ML concentration with experience in software engineering, web development, and data analysis',
+            profileUrl: 'https://www.linkedin.com/in/calebwold/'
+        };
+    }
+}
+
+function extractInfo(pattern, text) {
+    const match = text.match(pattern);
+    return match ? match[1] : null;
+}
+
+// Enhanced resume extraction with better fallback
+async function extractResumeText() {
+    try {
+        // Load PDF.js if not already loaded
+        if (!window.pdfjsLib) {
+            await loadPDFJS();
+        }
+        
+        const response = await fetch('resume.pdf');
+        if (!response.ok) throw new Error('Resume fetch failed');
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+        
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(' ');
+            fullText += pageText + '\n';
+        }
+        
+        return fullText;
+    } catch (error) {
+        console.warn('Using fallback resume data');
+        // Comprehensive fallback resume data
+        return `CALEB WOLDEMEDHINE
+Email: caleb.woldemedhine1@gmail.com | Phone: 720-410-4647
+LinkedIn: linkedin.com/in/calebwold | GitHub: github.com/calebwold
+
+EDUCATION
+University of Denver, Denver, CO
+Bachelor of Science, Computer Science (AI & ML Concentration) | GPA: 3.67
+Minor: Mathematics and Statistics | Expected Graduation: June 2027
+
+Relevant Coursework: Data Structures & Algorithms I & II, Database Management, Object-Oriented Software Development, Systems I, Topics in Artificial Intelligence (LLMs), Data Management & Analysis, Business Statistics, Calculus I–III, Discrete Structures, Linear Algebra
+
+TECHNICAL SKILLS
+Programming/Tech: Python, Java, C, C++, C#, R, HTML, CSS, TypeScript, JavaScript, SQL, NoSQL, MATLAB, NumPy
+Data & Engineering: Data Cleansing & Validation, Database Design & Integration, Time-Series Forecasting, NLP, System Integration, Sustainment Life Cycle, Power BI
+AI/ML: Generative AI, NLP, Machine Learning, Time-Series Forecasting, Deep Learning, Classification, Data Visualization, APIs
+
+EXPERIENCE
+Software Engineering Intern | Tempus Automation, Denver, CO | Jun 2025 – Aug 2025
+• Trained AI model for deck design using custom-built database in C# and MySQL
+• Designed database infrastructure for training data with 95% accuracy
+• Built web interface integrating AI model for automated design generation
+
+Web Developer | Denver Center for African Art, Denver, CO | Jun 2024 – Sept 2024
+• Built responsive website using HTML, CSS, JavaScript
+• Integrated secure Stripe payment system
+• Improved user engagement by 40%
+
+IT & Data Assistant | Michael Auto Sales, Denver, CO | Sept 2022 – Jan 2024
+• Analyzed profit/expense data using Excel and Python
+• Managed inventory using SQL in Dealer Cloud
+• Reduced data errors by 30%
+
+PROJECTS
+Stock Prediction and Analysis Tool | Dec 2024 – Feb 2025
+• Built Streamlit app with Prophet, Random Forest models
+• Integrated TextBlob sentiment analysis and pandas-ta indicators
+• Achieved 85% prediction accuracy
+
+DuDraw AI Coder | May 2025 – Jun 2025
+• AI tool that turns prompts into interactive games and visualizations
+• Uses large language models and DuDraw library
+
+NYC COVID-19 Spread Simulation | Jul 2025 – Aug 2025
+• Interactive simulation with real-time visualization
+• Adjustable controls and epidemic curve tracking
+
+LEADERSHIP
+President | National Society Of Black Engineers | Jun 2025 – Present
+Communications Chair | African Students United | Sep 2024 – Present`;
+    }
+}
+
+async function loadPDFJS() {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+        
+        setTimeout(() => reject(new Error('PDF.js load timeout')), 10000);
+    });
+}
+
+// Chatbot UI functions
 function openChatbotFromNav() {
     const chatbotContainer = document.getElementById('chatbotContainer');
     const chatbotWindow = document.getElementById('chatbotWindow');
     
-    // Show the chatbot container
     chatbotContainer.style.display = 'block';
     chatbotWindow.style.display = 'flex';
     
-    // Focus on the input field
     document.getElementById('chatbotInput').focus();
 }
 
 function closeChatbot() {
-    const chatbotContainer = document.getElementById('chatbotContainer');
-    chatbotContainer.style.display = 'none';
+    document.getElementById('chatbotContainer').style.display = 'none';
 }
 
 function minimizeChatbot() {
@@ -2352,12 +2500,12 @@ function hideTyping() {
     document.getElementById('typingIndicator').style.display = 'none';
 }
 
-// Safety filter for inappropriate content
+// Enhanced content safety filter
 function isInappropriate(message) {
     const inappropriateKeywords = [
-        'porn', 'xxx', 'adult', 'sex', 'nude', 'naked',
-        'bomb', 'explosive', 'kill', 'murder', 'violence',
-        'drugs', 'illegal', 'hack', 'steal', 'fraud',
+        'porn', 'xxx', 'adult', 'sex', 'nude', 'naked', 'nsfw',
+        'bomb', 'explosive', 'kill', 'murder', 'violence', 'weapon',
+        'drugs', 'illegal', 'hack', 'steal', 'fraud', 'scam',
         'redtube', 'pornhub', 'xhamster', 'xvideos'
     ];
     
@@ -2365,373 +2513,216 @@ function isInappropriate(message) {
     return inappropriateKeywords.some(keyword => messageLower.includes(keyword));
 }
 
+// Enhanced topic detection for better context
+function detectTopic(message) {
+    const messageLower = message.toLowerCase();
+    
+    const topics = {
+        gpa: ['gpa', 'grade', 'academic'],
+        experience: ['work', 'job', 'intern', 'experience', 'employment'],
+        projects: ['project', 'built', 'created', 'developed'],
+        skills: ['skill', 'programming', 'language', 'technology', 'tech'],
+        education: ['school', 'university', 'college', 'education', 'degree'],
+        leadership: ['leadership', 'president', 'chair', 'leader'],
+        contact: ['contact', 'reach', 'email', 'phone', 'linkedin']
+    };
+    
+    for (const [topic, keywords] of Object.entries(topics)) {
+        if (keywords.some(keyword => messageLower.includes(keyword))) {
+            return topic;
+        }
+    }
+    
+    return 'general';
+}
+
+// Build enhanced system prompt with live data
+function buildSystemPrompt() {
+    let prompt = `You are Caleb Woldemedhine's AI assistant. Your mission is to provide accurate, helpful, and contextual information about Caleb.
+
+CRITICAL RULES:
+1. ALWAYS maintain conversation context - understand pronouns and references to previous messages
+2. NEVER say "I don't have that information" - all key info is provided below
+3. Be conversational and natural, not robotic
+4. Vary your responses - don't be repetitive
+5. For follow-ups, reference specific details from earlier in the conversation
+6. Use live data when available (marked with timestamps below)
+
+CORE INFORMATION:
+GPA: 3.67
+Education: University of Denver, Computer Science (AI & ML Concentration), graduating June 2027
+Minors: Mathematics and Statistics
+
+WORK EXPERIENCE:
+1. Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025)
+   - Trained AI model for deck design using C# and MySQL
+   - Built custom database infrastructure
+   - Created web interface for AI integration
+
+2. Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024)
+   - Built responsive website with HTML, CSS, JavaScript
+   - Integrated Stripe payment system
+   - Improved user engagement by 40%
+
+3. IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024)
+   - Analyzed profit/expense data using Excel and Python
+   - Managed inventory with SQL
+   - Reduced data errors by 30%
+
+PROJECTS:
+1. Stock Prediction Tool - Streamlit app with Prophet & Random Forest models
+2. DuDraw AI Coder - Turns prompts into interactive games and visualizations
+3. NYC COVID-19 Simulation - Real-time epidemic modeling with interactive controls
+
+LEADERSHIP:
+- President of National Society of Black Engineers (Jun 2025 – Present)
+- Communications Chair of African Students United (Sep 2024 – Present)
+
+TECHNICAL SKILLS:
+- Languages: Python, Java, C++, C#, HTML, CSS, JavaScript, SQL
+- AI/ML: TensorFlow, PyTorch, Scikit-learn, NLP, Deep Learning
+- Data: Pandas, NumPy, Matplotlib, Plotly, Excel, Tableau
+- Tools: Git, MySQL, MongoDB, REST APIs
+
+CONTACT:
+- Email: caleb.woldemedhine1@gmail.com
+- Phone: 720-410-4647
+- LinkedIn: linkedin.com/in/calebwold
+- GitHub: github.com/calebwold
+`;
+
+    // Add live data if available
+    const liveData = conversationState.liveData;
+    
+    if (liveData.github) {
+        prompt += `\nLIVE GITHUB DATA (Updated: ${liveData.lastUpdated?.toLocaleTimeString() || 'Recently'}):\n`;
+        liveData.github.slice(0, 10).forEach(repo => {
+            prompt += `- ${repo.name}: ${repo.description} [${repo.language}] Stars: ${repo.stars}\n`;
+        });
+    }
+    
+    if (liveData.linkedin) {
+        prompt += `\nLIVE LINKEDIN DATA (Updated: ${liveData.lastUpdated?.toLocaleTimeString() || 'Recently'}):\n`;
+        prompt += `${liveData.linkedin.headline}\n${liveData.linkedin.summary}\n`;
+    }
+    
+    if (liveData.resume) {
+        prompt += `\nLIVE RESUME DATA (Updated: ${liveData.lastUpdated?.toLocaleTimeString() || 'Recently'}):\n`;
+        prompt += `${liveData.resume.substring(0, 1000)}...\n`;
+    }
+    
+    prompt += `\nRESPONSE STYLE:
+- Be concise but informative (2-4 sentences for simple questions)
+- Use bullet points for multiple items
+- Reference previous conversation when relevant
+- Connect general questions back to Caleb when appropriate
+- Be enthusiastic about Caleb's achievements`;
+    
+    return prompt;
+}
+
+// Main message sending function with enhanced error handling
 async function sendMessage() {
     const input = document.getElementById('chatbotInput');
     const message = input.value.trim();
     
     if (!message) return;
     
-    // Check for inappropriate content
+    // Safety check
     if (isInappropriate(message)) {
-        addMessage("I am a chatbot here to answer questions about Caleb Woldemedhine. I cannot answer questions about that topic. Please ask me about Caleb's background, experience, or projects instead.");
+        addMessage("I'm here to answer questions about Caleb Woldemedhine's background, experience, and projects. Please ask me something about Caleb!");
         input.value = '';
         return;
     }
     
+    // Update conversation state
+    const topic = detectTopic(message);
+    conversationState.userContext.askedAbout.add(topic);
+    conversationState.userContext.lastTopic = topic;
+    conversationState.userContext.conversationDepth++;
+    
     // Add user message
     addMessage(message, true);
-    messages.push({ role: 'user', content: message });
+    conversationState.messages.push({ role: 'user', content: message });
     input.value = '';
     
-    // Show typing indicator
     showTyping();
     
     try {
-        // Function to fetch GitHub repository information
-        async function fetchGitHubInfo(repoName) {
-            try {
-                const response = await fetch(`https://api.github.com/repos/calebwold/${repoName}`);
-                if (response.ok) {
-                    const repo = await response.json();
-                    return {
-                        name: repo.name,
-                        description: repo.description,
-                        language: repo.language,
-                        stars: repo.stargazers_count,
-                        forks: repo.forks_count,
-                        updated: repo.updated_at,
-                        url: repo.html_url
-                    };
-                }
-            } catch (error) {
-                console.log('GitHub API error:', error);
-            }
-            return null;
+        // Check if live data needs refresh
+        if (!conversationState.liveData.lastUpdated || 
+            Date.now() - conversationState.liveData.lastUpdated.getTime() > conversationState.liveData.cacheExpiry) {
+            console.log('Refreshing expired live data...');
+            await refreshLiveData();
         }
-
-        // Function to fetch GitHub repositories list
-        async function fetchGitHubRepos() {
-            try {
-                const response = await fetch('https://api.github.com/users/calebwold/repos?sort=updated');
-                if (response.ok) {
-                    const repos = await response.json();
-                    return repos.map(repo => ({
-                        name: repo.name,
-                        description: repo.description,
-                        language: repo.language,
-                        stars: repo.stargazers_count,
-                        url: repo.html_url
-                    }));
-                }
-            } catch (error) {
-                console.log('GitHub API error:', error);
-            }
-            return [];
-        }
-
-        // Function to extract text from resume PDF
-        async function extractResumeText() {
-            try {
-                console.log('Starting PDF extraction...');
-                
-                // Load PDF.js library dynamically with timeout
-                if (!window.pdfjsLib) {
-                    console.log('Loading PDF.js library...');
-                    const script = document.createElement('script');
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-                    document.head.appendChild(script);
-                    
-                    // Wait for PDF.js to load with timeout
-                    await Promise.race([
-                        new Promise(resolve => script.onload = resolve),
-                        new Promise((_, reject) => setTimeout(() => reject(new Error('PDF.js load timeout')), 10000))
-                    ]);
-                    console.log('PDF.js library loaded');
-                }
-
-                console.log('Fetching resume.pdf...');
-                const response = await fetch('resume.pdf');
-                if (!response.ok) {
-                    throw new Error(`Failed to fetch resume.pdf: ${response.status}`);
-                }
-                
-                const arrayBuffer = await response.arrayBuffer();
-                console.log('PDF fetched, parsing...');
-                
-                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-                console.log(`PDF parsed, ${pdf.numPages} pages found`);
-                
-                let fullText = '';
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(' ');
-                    fullText += pageText + '\n';
-                    console.log(`Page ${i} extracted`);
-                }
-                
-                console.log('PDF extraction complete:', fullText.substring(0, 200) + '...');
-                return fullText;
-            } catch (error) {
-                console.error('Resume PDF extraction error:', error);
-                // Return fallback information if PDF extraction fails
-                return `Caleb Woldemedhine - Computer Science Student
-University of Denver - GPA: 3.67
-AI & ML Concentration, Minors: Mathematics and Statistics
-Software Engineering Intern at Tempus Automation
-Web Developer at Denver Center for African Art
-IT & Data Assistant at Michael Auto Sales
-Projects: Stock Prediction Tool, DuDraw AI Coder, NYC COVID-19 Simulation
-Leadership: President of NSBE, Communications Chair of ASU
-Skills: Python, Java, C++, HTML, CSS, JavaScript, SQL, Machine Learning`;
-            }
-        }
-
-        // Function to fetch LinkedIn profile data (using a web scraping approach)
-        async function fetchLinkedInData() {
-            try {
-                // Use a CORS proxy to fetch LinkedIn profile
-                const proxyUrl = 'https://api.allorigins.win/raw?url=';
-                const linkedinUrl = 'https://www.linkedin.com/in/calebwold/';
-                
-                const response = await fetch(proxyUrl + encodeURIComponent(linkedinUrl));
-                if (response.ok) {
-                    const html = await response.text();
-                    
-                    // Extract key information using regex patterns
-                    const extractInfo = (pattern, text) => {
-                        const match = text.match(pattern);
-                        return match ? match[1] : null;
-                    };
-                    
-                    const linkedinData = {
-                        headline: extractInfo(/<title>([^<]+)/i, html) || 'Software Engineer',
-                        summary: extractInfo(/<meta name="description" content="([^"]+)"/i, html) || 'Computer Science student with AI/ML focus',
-                        experience: [],
-                        education: [],
-                        skills: []
-                    };
-                    
-                    // Extract experience section
-                    const experienceMatches = html.match(/<section[^>]*class="[^"]*experience[^"]*"[^>]*>([\s\S]*?)<\/section>/gi);
-                    if (experienceMatches) {
-                        experienceMatches.forEach(match => {
-                            const titleMatch = match.match(/<h3[^>]*>([^<]+)<\/h3>/i);
-                            const companyMatch = match.match(/<h4[^>]*>([^<]+)<\/h4>/i);
-                            if (titleMatch && companyMatch) {
-                                linkedinData.experience.push({
-                                    title: titleMatch[1].trim(),
-                                    company: companyMatch[1].trim()
-                                });
-                            }
-                        });
-                    }
-                    
-                    return linkedinData;
-                }
-            } catch (error) {
-                console.log('LinkedIn data fetch error:', error);
-            }
-            return null;
-        }
-
-        // Check if the question is about GitHub, LinkedIn, or resume
-        const isGitHubQuestion = message.toLowerCase().includes('github') || 
-                                message.toLowerCase().includes('repository') || 
-                                message.toLowerCase().includes('repo') ||
-                                message.toLowerCase().includes('code') ||
-                                message.toLowerCase().includes('project');
         
-        const isLinkedInQuestion = message.toLowerCase().includes('linkedin') || 
-                                  message.toLowerCase().includes('profile') ||
-                                  message.toLowerCase().includes('network') ||
-                                  message.toLowerCase().includes('professional');
-
-        const isResumeQuestion = message.toLowerCase().includes('resume') || 
-                                message.toLowerCase().includes('cv') ||
-                                message.toLowerCase().includes('gpa') ||
-                                message.toLowerCase().includes('grade') ||
-                                message.toLowerCase().includes('academic') ||
-                                message.toLowerCase().includes('education');
-
-        let additionalContext = '';
+        // Build conversation history (keep last 15 messages for better context)
+        const messageHistory = conversationState.messages.slice(-15);
         
-        // Use cached live data (automatically refreshed every 30 minutes)
-        if (isGitHubQuestion && liveDataCache.github) {
-            additionalContext += `\n\nCURRENT GITHUB REPOSITORIES (live data, updated ${liveDataCache.lastUpdated ? liveDataCache.lastUpdated.toLocaleTimeString() : 'recently'}):\n`;
-            liveDataCache.github.slice(0, 10).forEach(repo => {
-                additionalContext += `- ${repo.name}: ${repo.description || 'No description'} (${repo.language || 'Various languages'}) - ${repo.stars} stars\n`;
-            });
-        }
-
-        if (isLinkedInQuestion && liveDataCache.linkedin) {
-            additionalContext += `\n\nCURRENT LINKEDIN PROFILE DATA (live data, updated ${liveDataCache.lastUpdated ? liveDataCache.lastUpdated.toLocaleTimeString() : 'recently'}):\n`;
-            additionalContext += `Headline: ${liveDataCache.linkedin.headline}\n`;
-            additionalContext += `Summary: ${liveDataCache.linkedin.summary}\n`;
-            if (liveDataCache.linkedin.experience.length > 0) {
-                additionalContext += `Recent Experience:\n`;
-                liveDataCache.linkedin.experience.slice(0, 3).forEach(exp => {
-                    additionalContext += `- ${exp.title} at ${exp.company}\n`;
-                });
-            }
-        }
-
-        if (isResumeQuestion && liveDataCache.resume) {
-            additionalContext += `\n\nRESUME CONTENT (live data, updated ${liveDataCache.lastUpdated ? liveDataCache.lastUpdated.toLocaleTimeString() : 'recently'}):\n`;
-            additionalContext += `${liveDataCache.resume}\n\n`;
-        }
-
-        // Prepare system prompt with live data
-        const systemPrompt = `You are Caleb Woldemedhine's AI assistant. Your primary purpose is to provide useful, accurate information about Caleb Woldemedhine's background, experience, skills, and projects.
-
-IMPORTANT: Caleb's GPA is 3.67. When asked about his GPA, always provide this information.
-
-KEY INFORMATION TO ALWAYS PROVIDE:
-- GPA: 3.67
-- Work Experience: Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025), Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024), IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024)
-- Education: University of Denver, Computer Science with AI & ML concentration, graduating June 2027
-- Projects: Stock Prediction Tool, DuDraw AI Coder, NYC COVID-19 Simulation
-- Leadership: President of NSBE, Communications Chair of ASU
-- Skills: Python, Java, C++, HTML, CSS, JavaScript, SQL, Machine Learning, AI/ML
-- Contact: caleb.woldemedhine1@gmail.com, 720-410-4647
-
-NEVER say "I don't have that information" - all this information is provided above.
-
-CRITICAL INSTRUCTION: The live data provided below contains the most current and accurate information from Caleb's resume, LinkedIn, and GitHub profiles. ALWAYS use this live data when available instead of any fallback information.
-
-CORE MISSION: Always provide valuable information about Caleb. Even for general questions, find relevant connections to Caleb's experience, skills, or projects. For follow-up questions, always refer to specific details about Caleb rather than giving generic responses.
-
-ABOUT CALEB WOLDEMEDHINE:
-Caleb Woldemedhine is a Computer Science student at University of Denver with AI & ML concentration, graduating June 2027. He has minors in Mathematics and Statistics. His GPA is 3.67.
-
-EDUCATION:
-- University of Denver, Denver, CO - Bachelor of Science, Computer Science (AI & ML Concentration)
-- Minor: Mathematics and Statistics
-- GPA: 3.67
-- Relevant Coursework: Data Structures & Algorithms I & II, Database Management, Object-Oriented Software Development, Systems I, Topics in Artificial Intelligence (LLMs), Data Management & Analysis, Business Statistics, Calculus I–III, Discrete Structures, Linear Algebra
-
-TECHNICAL SKILLS:
-Programming/Tech: Python, Java, C, C++, C#, R, HTML, CSS, TypeScript, JavaScript, SQL, NoSQL, MATLAB, NumPy
-Data & Engineering: Data Cleansing & Validation, Database Design & Integration, Time-Series Forecasting, NLP, System Integration, Sustainment Life Cycle, Power BI
-AI/ML: Generative AI, NLP, Machine Learning, Time-Series Forecasting, Deep Learning, Classification, Data Visualization, APIs
-
-EXPERIENCE:
-- Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025): Trained AI model for deck design using custom-built database, designed database infrastructure, built web interface integrating AI model
-- Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024): Built responsive website using HTML, CSS, JavaScript, integrated secure Stripe payment system
-- IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024): Analyzed profit/expense data using Excel and Python, managed inventory in Dealer Cloud using SQL
-
-PROJECTS:
-- Stock Prediction and Analysis Tool (Dec 2024 – Feb 2025): Streamlit app combining Prophet, Random Forest, scikit-learn models with TextBlob sentiment analysis and pandas-ta indicators
-- DuDraw AI Coder (May 2025 – Jun 2025): AI tool that turns user prompts into interactive games, drawings, and visualizations using DuDraw and large language models
-- NYC COVID-19 Spread Simulation (Jul 2025 – Aug 2025): Interactive COVID-19 spread simulation with adjustable controls and real-time epidemic curve visualization
-
-LEADERSHIP:
-- President of National Society Of Black Engineers (Jun 2025 – Present): Oversee executive board, plan career fairs, lead workshops, secure funding through partnerships
-- Communications Chair of African Students United (Sep 2024 – Present): Lead communications, manage social media, create promotional materials
-
-CONTACT:
-- Email: caleb.woldemedhine1@gmail.com
-- Phone: 720-410-4647
-- LinkedIn: https://www.linkedin.com/in/calebwold/
-- GitHub: https://github.com/calebwold
-
-RESPONSE GUIDELINES:
-- Keep responses concise and natural unless follow-up questions are asked
-- CRITICAL: Always maintain full conversation context - understand implied references, pronouns, and follow-up questions
-- When users say "these", "that", "it", "he", "his", "this", etc., always refer back to the conversation history to understand what they're referring to
-- For ANY question that seems to reference something previously discussed, check the conversation history for context
-- Examples of contextual understanding:
-  * "How did he use these?" → refer to previously mentioned languages/tools
-  * "Tell me more about that" → refer to previously mentioned project/experience
-  * "What about his other projects?" → refer to previously discussed projects
-  * "Is he good at it?" → refer to previously mentioned skill/technology
-- PRIORITY: Always use the live data provided above when available (GitHub repos, LinkedIn profile, Resume content) as it contains the most current information
-- For GitHub questions, use the live repository information provided above
-- For LinkedIn questions, use the live LinkedIn data provided above
-- For resume/GPA questions, use the live resume content provided above
-- Write in a natural, conversational tone - avoid robotic or overly formal language
-- VARY YOUR RESPONSES: Don't give the same generic response every time. Be creative and engaging.
-- CORE MISSION: Always provide useful information about Caleb Woldemedhine. Even for general questions, find ways to connect back to Caleb's experience, skills, or projects when relevant.
-- For follow-up questions, ALWAYS use the comprehensive information about Caleb provided above - don't give generic responses
-- You can answer simple general questions (weather, basic facts, etc.) but keep responses brief and try to connect them to Caleb when possible
-- For inappropriate content (porn, violence, illegal activities), respond: "I am a chatbot here to answer questions about Caleb Woldemedhine. I cannot answer questions about [topic]. Please ask me about Caleb's background, experience, or projects instead."
-- Use context and reasoning to provide helpful answers based on available information
-- Be conversational and friendly while staying professional
-- If asked about topics unrelated to Caleb, answer briefly but always try to redirect to Caleb's relevant information when appropriate
-- Avoid giving weird, inappropriate, or off-topic responses
-- IMPORTANT: Only provide contact information (email, LinkedIn, GitHub) when specifically asked about how to contact Caleb or get in touch with him
-- If you don't know something specific about Caleb, provide what you do know and suggest contacting Caleb directly
-- ALWAYS use the comprehensive information provided above about Caleb - don't say "I don't have that information" when the information is clearly provided in the context
-- FOR FOLLOW-UP QUESTIONS: Always refer back to Caleb's specific experience, projects, skills, or education - never give generic responses
-- FOR WORK EXPERIENCE QUESTIONS: Always provide specific details about Caleb's three main roles: Tempus Automation (Software Engineering Intern), Denver Center for African Art (Web Developer), and Michael Auto Sales (IT & Data Assistant)
-- FOR ANY QUESTION ABOUT CALEB: Use the comprehensive information provided above - never say "I don't have that information"${additionalContext}`;
-
-        // Build conversation history for context
-        const conversationHistory = messages.slice(-10); // Keep last 10 messages for better context
-        const messageHistory = conversationHistory.map(msg => ({
-            role: msg.role,
-            content: msg.content
-        }));
-
-        // Add current message
-        messageHistory.push({ role: 'user', content: message });
-
-        // Debug: Log system prompt length
-        console.log('System prompt length:', systemPrompt.length);
-        console.log('System prompt preview:', systemPrompt.substring(0, 200) + '...');
-        
-        // Call OpenAI API with conversation history
+        // Call OpenAI API
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${OPENAI_API_KEY}`
             },
-                body: JSON.stringify({
-                    model: 'gpt-4o-mini',
-                    messages: [
-                        { role: 'system', content: systemPrompt },
-                        ...messageHistory
-                    ],
-                    max_tokens: 500,
-                    temperature: 0.8
-                })
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    { role: 'system', content: buildSystemPrompt() },
+                    ...messageHistory
+                ],
+                max_tokens: 600,
+                temperature: 0.7,
+                presence_penalty: 0.6,
+                frequency_penalty: 0.3
+            })
         });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error?.message || `API error: ${response.status}`);
+        }
         
         const data = await response.json();
         
         hideTyping();
         
-        // Debug: Log API response
-        console.log('API Response:', data);
-        
-        if (data.choices && data.choices[0] && data.choices[0].message) {
+        if (data.choices && data.choices[0]?.message) {
             const botMessage = data.choices[0].message.content;
-            console.log('Bot message:', botMessage);
-            
-            // Check if AI is giving unhelpful responses and provide fallback
-            if (botMessage.includes("I don't have that information") || 
-                botMessage.includes("I don't have specific information") ||
-                botMessage.includes("I don't have access to")) {
-                
-                console.log('AI gave unhelpful response, providing fallback');
-                const fallbackResponse = getFallbackResponse(message);
-                addMessage(fallbackResponse);
-                messages.push({ role: 'assistant', content: fallbackResponse });
-            } else {
-                addMessage(botMessage);
-                messages.push({ role: 'assistant', content: botMessage });
-            }
+            addMessage(botMessage);
+            conversationState.messages.push({ role: 'assistant', content: botMessage });
         } else {
-            console.error('API Error:', data);
-            addMessage(`Error: ${data.error?.message || 'Something went wrong'}`);
+            throw new Error('Invalid API response format');
         }
         
     } catch (error) {
         hideTyping();
-        addMessage(`Error: ${error.message}. Please try again or contact Caleb directly at caleb.woldemedhine1@gmail.com`);
+        console.error('Chat error:', error);
+        
+        // User-friendly error messages
+        let errorMessage = "I'm having trouble connecting right now. ";
+        
+        if (error.message.includes('API key')) {
+            errorMessage += "There's an issue with my configuration. Please contact Caleb directly at caleb.woldemedhine1@gmail.com";
+        } else if (error.message.includes('rate limit')) {
+            errorMessage += "I've received too many requests. Please try again in a moment.";
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+            errorMessage += "Please check your internet connection and try again.";
+        } else {
+            errorMessage += "Please try asking your question again, or contact Caleb at caleb.woldemedhine1@gmail.com";
+        }
+        
+        addMessage(errorMessage);
     }
 }
+
+// Expose functions globally
+window.openChatbotFromNav = openChatbotFromNav;
+window.closeChatbot = closeChatbot;
+window.minimizeChatbot = minimizeChatbot;
+window.sendMessage = sendMessage;
+window.refreshLiveData = refreshLiveData;
 
 // Allow sending messages with Enter key
 document.addEventListener('DOMContentLoaded', function() {
@@ -2745,3 +2736,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
