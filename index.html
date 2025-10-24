@@ -30,6 +30,7 @@
         }
 
         /*!sc*/
+        
 
         .kuDgdR:visited {
             color: #440381;
@@ -151,6 +152,7 @@
             user-select: none;
             font-family: inherit;
         }
+
 
         /*!sc*/
 
@@ -1204,6 +1206,13 @@
             min-height: 100vh;
             background: #c6c6c6;
         }
+        /* neutralize the global 100vh */
+body > * { min-height: auto !important; }
+
+/* the only thing that should control page height */
+#main-container { min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; }
+
 
         /*!sc*/
 
@@ -1913,8 +1922,9 @@
         }
         console.log('Cache cleared - version 2025-01-27-v4 - Static HTML site loaded');
     </script>
-    <div id="main-container">
-        <div style="display:none"><svg width="0"><filter id="spray"><feTurbulence id="turbulence" type="fractalNoise" baseFrequency=".9" numOctaves="12"></feTurbulence><feDisplacementMap in="SourceGraphic" scale="14"></feDisplacementMap></filter></svg></div>
+<div id="main-container">
+  <main id="page-content">        
+    <div style="display:none"><svg width="0"><filter id="spray"><feTurbulence id="turbulence" type="fractalNoise" baseFrequency=".9" numOctaves="12"></feTurbulence><feDisplacementMap in="SourceGraphic" scale="14"></feDisplacementMap></filter></svg></div>
         <div class="sc-cOxWqc hAPyEP Navbar__AppBar-sc-1chd2da-0 hnxbbu">
             <div class="Layout__Center-sc-zdm1ze-0 jGGuVW">
                 <div style="align-items:center" class="Layout__Grid-sc-zdm1ze-1 NLlhm">
@@ -1986,7 +1996,7 @@
                     <h2 class="Typography__BaseFont-sc-10ju6ur-1-h1 Typography__H1-sc-10ju6ur-2 fHAZc kCcoUt" style="margin-bottom: 40px;">About Me</h2>
                     <div class="sc-cOxWqc hAPyEP" style="padding: 24px; max-width: 800px; margin: 0 auto;">
                         <p style="font-size: 18px; line-height: 1.6; margin-bottom: 20px;">
-<p>Hello, my name is Caleb Woldemedhine. I am a junior studying Computer Science at the University of Denver with a concentration in Machine Learning and Artificial Intelligence, and minors in Mathematics and Business Information Analytics.</p>
+<p>Hello, my name is Caleb Woldemedhine. I am a junior studying Computer Science at the University of Denver with a concentration in Machine Learning and Artificial Intelligence, and minors in Mathematics and Statistics.</p>
 
 <p>In Summer 2025, I interned as a Software Engineer, working on two AI-focused projects. First, I trained an AI model to generate CAD designs, using C# to expand its capabilities and building a MySQL database linked to a JSON file for structured training data. Second, I integrated a geometry-based AI tool into the company’s website to automatically calculate lumber and material needs for specific spaces, improving project planning and estimation. Outside of my internship, I’ve built generative AI applications, implemented time-series forecasting models, and created data visualizations.I am seeking a software engineering internship in data analytics, large language models, machine learning, or AI.</p>
 
@@ -2128,58 +2138,6 @@
                 </div>
             </div>
         </div>
-<body>
-<!-- Contact Section -->
-<div id="contact" class="Layout__Center-sc-zdm1ze-0 jGGuVW" style="padding: 80px 0 0 0; background: #cfcfcf;">
-  <div class="Layout__Grid-sc-zdm1ze-1 NLlhm">
-    <div style="grid-column: 1 / span 12; text-align: center;">
-      <h2 class="Typography__BaseFont-sc-10ju6ur-1-h1 Typography__H1-sc-10ju6ur-2 fHAZc kCcoUt" style="margin-bottom: 40px;">Contact Me</h2>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-top: 200px;">
-        <div class="sc-cOxWqc hAPyEP" style="padding: 24px;">
-          <h3 style="font-size: 20px; margin-bottom: 16px; font-weight: bold;">📧 Email</h3>
-          <a href="mailto:caleb.woldemedhine1@gmail.com" class="sc-bcXHqe kuDgdR" style="font-size: 16px;">caleb.woldemedhine1@gmail.com</a>
-        </div>
-        <div class="sc-cOxWqc hAPyEP" style="padding: 24px;">
-          <h3 style="font-size: 20px; margin-bottom: 16px; font-weight: bold;">💼 LinkedIn</h3>
-          <a href="https://www.linkedin.com/in/calebwold/" target="_blank" rel="noreferrer" class="sc-bcXHqe kuDgdR" style="font-size: 16px;">LinkedIn</a>
-        </div>
-        <div class="sc-cOxWqc hAPyEP" style="padding: 24px;">
-          <h3 style="font-size: 20px; margin-bottom: 16px; font-weight: bold;">🐙 GitHub</h3>
-          <a href="https://github.com/calebwold" target="_blank" rel="noreferrer" class="sc-bcXHqe kuDgdR" style="font-size: 16px;">GitHub</a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer moved INSIDE contact section -->
-  <footer class="sc-cOxWqc cRbsYR Footer__StyledFooter-sc-4k0ie6-0" style="width: 100%; margin-top: 380px;">
-    <div class="Layout__Center-sc-zdm1ze-0 jGGuVW" style="width: 100%;">
-      <div class="Layout__Grid-sc-zdm1ze-1 NLlhm" style="width: 100%;">
-        
-        <div class="Footer__LogoWrapper-sc-4k0ie6-2 eYAnLE">
-          <a href="https://www.linkedin.com/in/calebwold/" target="_blank" rel="noreferrer">
-            <div class="Typography__LogoText-sc-10ju6ur-9 KUrBd">
-              <div data-text="Caleb Woldemedhine" class="Typography__StyledEmbossedText-sc-10ju6ur-0 ewBWJT">
-                Caleb Woldemedhine
-              </div>
-            </div>
-          </a>
-        </div>
-
-        <div class="Footer__Links-sc-4k0ie6-1 dzBOSd">
-          <a href="https://www.linkedin.com/in/calebwold/" target="_blank" rel="noreferrer" class="sc-bcXHqe kuDgdR">LinkedIn</a>
-          <a href="https://github.com/calebwold" target="_blank" rel="noreferrer" class="sc-bcXHqe kuDgdR">GitHub</a>
-          <a href="mailto:caleb.woldemedhine1@gmail.com" target="_blank" rel="noreferrer" class="sc-bcXHqe kuDgdR">Email</a>
-        </div>
-
-      </div>
-    </div>
-
-    <div style="text-align: center; padding: 16px; border-top: 2px solid #848584; margin-top: 16px;">
-      <p style="color: #848584; font-size: 14px;">Copyright © 2025 Caleb Woldemedhine. All Rights Reserved.</p>
-    </div>
-  </footer>
-</div>
 
 <!-- AI Assistant Chat Window -->
 <div class="chatbot-container" id="chatbotContainer" style="display: none;">
@@ -2209,20 +2167,77 @@
         </div>
     </div>
 </div>
+<!-- Contact Section (fixed, no extra space, no long page) -->
+<div id="contact" class="Layout__Center-sc-zdm1ze-0 jGGuVW"
+     style="background:#cfcfcf; padding:40px 0 20px; min-height:auto; height:auto;">
+  <div class="Layout__Grid-sc-zdm1ze-1 NLlhm">
+    <div style="grid-column:1 / span 12; text-align:center;">
+      <h2 class="Typography__BaseFont-sc-10ju6ur-1-h1 Typography__H1-sc-10ju6ur-2 fHAZc kCcoUt"
+          style="margin-bottom:20px;">Contact Me</h2>
 
-<!-- JS to remove injected containers -->
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const kill = () => {
-      const msg = document.getElementById("hl-aria-live-message-container");
-      const alert = document.getElementById("hl-aria-live-alert-container");
-      if (msg) msg.remove();
-      if (alert) alert.remove();
-    };
-    kill();
-    new MutationObserver(kill).observe(document.body, { childList: true, subtree: true });
-  });
-</script>
+      <div style="display:grid;
+                  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+                  gap:24px;
+                  margin-top:10px;">
+        <div class="sc-cOxWqc hAPyEP" style="padding:20px;">
+          <h3 style="font-size:20px; margin-bottom:10px; font-weight:bold;">Email</h3>
+          <a href="mailto:caleb.woldemedhine1@gmail.com"
+             class="sc-bcXHqe kuDgdR" style="font-size:16px;">
+            caleb.woldemedhine1@gmail.com
+          </a>
+        </div>
+
+        <div class="sc-cOxWqc hAPyEP" style="padding:20px;">
+          <h3 style="font-size:20px; margin-bottom:10px; font-weight:bold;">LinkedIn</h3>
+          <a href="https://www.linkedin.com/in/calebwold/"
+             target="_blank" rel="noreferrer"
+             class="sc-bcXHqe kuDgdR" style="font-size:16px;">
+            LinkedIn
+          </a>
+        </div>
+
+        <div class="sc-cOxWqc hAPyEP" style="padding:20px;">
+          <h3 style="font-size:20px; margin-bottom:10px; font-weight:bold;">GitHub</h3>
+          <a href="https://github.com/calebwold"
+             target="_blank" rel="noreferrer"
+             class="sc-bcXHqe kuDgdR" style="font-size:16px;">
+            GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div> 
+</main>       <!-- closes #page-content -->
+</div>        <!-- closes #main-container -->
+<footer class="sc-cOxWqc cRbsYR Footer__StyledFooter-sc-4k0ie6-0" style="width: 100%; margin-top: 0;">
+  <div style="text-align: center;">
+
+    <div class="Footer__LogoWrapper-sc-4k0ie6-2 eYAnLE">
+      <a href="https://www.linkedin.com/in/calebwold/" target="_blank" rel="noreferrer">
+        <div class="Typography__LogoText-sc-10ju6ur-9 KUrBd">
+          <div data-text="Caleb Woldemedhine" class="Typography__StyledEmbossedText-sc-10ju6ur-0 ewBWJT">
+            Caleb Woldemedhine
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <div class="Footer__Links-sc-4k0ie6-1 dzBOSd" style="margin-top: 8px;">
+      <a href="https://www.linkedin.com/in/calebwold/" target="_blank" rel="noreferrer" class="sc-bcXHqe kuDgdR" style="margin: 0 10px;">LinkedIn</a>
+      <a href="https://github.com/calebwold" target="_blank" rel="noreferrer" class="sc-bcXHqe kuDgdR" style="margin: 0 10px;">GitHub</a>
+      <a href="mailto:caleb.woldemedhine1@gmail.com" target="_blank" rel="noreferrer" class="sc-bcXHqe kuDgdR" style="margin: 0 10px;">Email</a>
+    </div>
+
+    <div style="border-top: 2px solid #848584; padding-top: 16px; margin-top: 16px;">
+      <p style="color: #848584; font-size: 14px; margin: 0;">
+        Copyright © 2025 Caleb Woldemedhine. All Rights Reserved.
+      </p>
+    </div>
+
+
 
 <!-- AI Assistant functionality with RAG + OpenAI -->
 <script>
@@ -2736,4 +2751,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
