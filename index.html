@@ -1735,6 +1735,71 @@ main { flex: 1; }
         }
 
     </style>
+        <style>
+            /* keep the page from forcing every child to 100vh */
+            html, body { min-height: auto; }
+            body > * { min-height: auto !important; }
+
+            /* the only element managing vertical height */
+            #main-container { min-height: 100svh; display: flex; flex-direction: column; }
+            main { flex: 1; }
+
+            /* Fluid headline without breaking your existing classes */
+            .Typography__H1-sc-10ju6ur-2 {
+                font-size: clamp(1.25rem, 2.2vw + 0.8rem, 2.5rem);
+                line-height: 1.25;
+            }
+
+            /* Footer logo text */
+            .Typography__LogoText-sc-10ju6ur-9 {
+                font-size: clamp(1rem, 1.2vw + 0.8rem, 1.75rem);
+            }
+
+            /* Section paddings that scale */
+            .HeroMain__Wrapper-sc-9xy7fu-0,
+            #about, #experience, #projects, #contact {
+                padding: clamp(40px, 6vw, 80px) 0;
+            }
+
+            /* Experience & Projects card grids */
+            #experience .experience-cards-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                gap: clamp(12px, 2.5vw, 24px);
+            }
+            #projects [style*="grid-template-columns"] {
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+                gap: clamp(12px, 2.5vw, 24px) !important;
+            }
+
+            /* Cap hero width and use a mobile-first scale */
+            .HeroMain__Monitors-sc-9xy7fu-2 { --monitor-width: 300; max-width: 100%; }
+
+            /* Base keeps your desktop size */
+            .chatbot-window { width: 350px; height: 450px; }
+
+            @media (max-width: 600px) {
+                .HeroMain__Monitors-sc-9xy7fu-2 { --monitor-width: 220; }
+                .Navbar__AppBar-sc-1chd2da-0 .Layout__Grid-sc-zdm1ze-1 {
+                    gap: 8px !important;
+                    flex-wrap: wrap !important;
+                }
+                .Navbar__NavButtons-sc-1chd2da-1.fZVgJP {
+                    flex-wrap: wrap; justify-content: center !important;
+                }
+                .chatbot-container { right: 12px; left: 12px; }
+                .chatbot-window {
+                    width: 100%;
+                    max-width: 100%;
+                    height: min(70vh, 520px);
+                    right: 0;
+                }
+            }
+
+            @media (max-height: 600px) {
+                .chatbot-window { height: 60vh; }
+            }
+        </style>
 
     <!-- AI Assistant Chat Window Styles -->
     <style>
@@ -2015,12 +2080,12 @@ main { flex: 1; }
             </div>
         </div>
 
-        <!-- Experience Section -->
+         <!-- Experience Section -->
         <div id="experience" class="Layout__Center-sc-zdm1ze-0 jGGuVW" style="padding: 80px 0; background: #cfcfcf;">
             <div class="Layout__Grid-sc-zdm1ze-1 NLlhm">
                 <div style="grid-column: 1 / span 12; text-align: center;">
                     <h2 class="Typography__BaseFont-sc-10ju6ur-1-h1 Typography__H1-sc-10ju6ur-2 fHAZc kCcoUt" style="margin-bottom: 40px;">Experience</h2>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 40px;">
+                    <div class="experience-cards-grid" style="margin-top: 40px;">
                         <!-- Frontend Development -->
                         <div class="sc-cOxWqc hAPyEP" style="padding: 24px;">
                             <h3 style="font-size: 24px; margin-bottom: 20px; font-weight: bold;">Frontend Development</h3>
@@ -2097,6 +2162,7 @@ main { flex: 1; }
                 </div>
             </div>
         </div>
+
 
         <!-- Projects Section -->
         <div id="projects" class="Layout__Center-sc-zdm1ze-0 jGGuVW" style="padding: 80px 0;">
