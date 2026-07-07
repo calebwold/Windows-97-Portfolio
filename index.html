@@ -2047,10 +2047,11 @@ main { flex: 1; }
                     <h2 class="Typography__BaseFont-sc-10ju6ur-1-h1 Typography__H1-sc-10ju6ur-2 fHAZc kCcoUt" style="margin-bottom: 40px;">About Me</h2>
                     <div class="sc-cOxWqc hAPyEP" style="padding: 24px; max-width: 800px; margin: 0 auto;">
                         <p style="font-size: 18px; line-height: 1.6; margin-bottom: 20px;">
-<p>Hello, my name is Caleb Woldemedhine. I am a junior studying Computer Science at the University of Denver with a concentration in Machine Learning and Artificial Intelligence, and minors in Mathematics and Statistics.</p>
+<p>Hello, my name is Caleb Woldemedhine. I am a Computer Science student at the University of Denver with a concentration in Machine Learning and Artificial Intelligence, and minors in Mathematics and Statistics.</p>
 
-<p>In Summer 2025, I worked as a Software Engineering Intern where I helped build tools to automate deck design and cost estimates. I worked in C# with ML.NET to build a model that uses project dimensions and material choices to predict pricing and material needs. I also set up a SQL database and JSON-based pipeline to organize pricing, inventory, and training data for the model. Outside of this role, I’ve also built generative AI tools, time-series forecasting models, and data visualizations.<p>
-                        </p>
+<p>I am currently a Software Engineering Intern at Palo Alto Networks, where I work on backend AI systems that help turn agent results into charts and tables for the frontend. I have worked with LLM prompts, JSON outputs, and Python testing to improve how the system chooses and validates visualizations.</p>
+
+<p>In Summer 2025, I worked as a Software Engineering Intern at Tempus Automation, where I trained and evaluated a C# / ML.NET model to help automate deck design and cost estimates using project dimensions, material choices, and pricing rules. I also helped organize pricing, inventory, and model training data using SQL and JSON. Outside of these roles, I have built generative AI tools, forecasting models, and data visualizations.</p>                        </p>
                     </div>
                 </div>
             </div>
@@ -2465,58 +2466,54 @@ async function extractResumeText() {
     } catch (error) {
         console.warn('Using fallback resume data');
         // Comprehensive fallback resume data
-        return `CALEB WOLDEMEDHINE
+return `CALEB WOLDEMEDHINE
 Email: caleb.woldemedhine1@gmail.com | Phone: 720-410-4647
 LinkedIn: linkedin.com/in/calebwold | GitHub: github.com/calebwold
 
 EDUCATION
 University of Denver, Denver, CO
-Bachelor of Science, Computer Science (AI & ML Concentration) | GPA: 3.67
-Minor: Mathematics and Statistics | Expected Graduation: June 2027
+Bachelor of Science, Computer Science (AI & ML Concentration) | GPA: 3.66
+Minors: Mathematics and Statistics | Expected Graduation: June 2027
 
-Relevant Coursework: Data Structures & Algorithms I & II, Database Management, Object-Oriented Software Development, Systems I, Topics in Artificial Intelligence (LLMs), Data Management & Analysis, Business Statistics, Calculus I–III, Discrete Structures, Linear Algebra
+Relevant Coursework: Data Structures & Algorithms I & II, Object-Oriented Software Development, Systems I & II, Database Organization & Management, Topics in Artificial Intelligence (Machine Learning & LLMs), Applied Math for Data Science and AI, Machine Learning for IoT and Embedded Devices, Linear Algebra, Discrete Structures, Introduction to Probability
 
 TECHNICAL SKILLS
-Programming/Tech: Python, Java, C, C++, C#, R, HTML, CSS, TypeScript, JavaScript, SQL, NoSQL, MATLAB, NumPy
-Data & Engineering: Data Cleansing & Validation, Database Design & Integration, Time-Series Forecasting, NLP, System Integration, Sustainment Life Cycle, Power BI
-AI/ML: Generative AI, NLP, Machine Learning, Time-Series Forecasting, Deep Learning, Classification, Data Visualization, APIs
+Languages & Frameworks: Python, Java, C, C++, C#, SQL, JavaScript, TypeScript, R, Haskell, HTML, CSS, React, Next.js
+Libraries & Technologies: PyTorch, TensorFlow, Keras, Scikit-learn, ML.NET, Prophet, pandas, NumPy, Plotly, JSON, REST APIs, AWS, Docker, Git, Linux, Excel, Tableau
 
 EXPERIENCE
-Software Engineering Intern | Tempus Automation, Denver, CO | Jun 2025 – Aug 2025
-• Trained AI model for deck design using custom-built database in C# and MySQL
-• Designed database infrastructure for training data with 95% accuracy
-• Built web interface integrating AI model for automated design generation
+Software Engineering Intern | Palo Alto Networks, Santa Clara, CA | Jun 2026 – Present
+• Integrated an LLM-driven visualization service into a pub/sub and DAG-based multi-agent backend, converting agent query results into frontend-ready JSON for PANWDS chart and table rendering
+• Built a Python test harness to evaluate visualization-selection accuracy with real agent outputs, then refined LLM prompts and fixed backend data-shaping/routing issues across metric, table, bar, line, donut, scatter, and heatmap components
 
-Web Developer | Denver Center for African Art, Denver, CO | Jun 2024 – Sept 2024
-• Built responsive website using HTML, CSS, JavaScript
-• Integrated secure Stripe payment system
-• Improved user engagement by 40%
+Data Technician | Frederick S. Pardee Institute for International Futures, Denver, CO | Sept 2025 – Present
+• Cleaned and preprocessed international education datasets using Python and pandas, standardizing country-year coverage, resolving missing or inconsistent values, and running quality checks before database and website updates
+• Built a Python import script to convert cleaned Excel datasets into SQL-ready inserts, automate formatting and loading workflows, and verify imported values against the Data Dictionary for accurate database integration
+
+Software Engineering Intern | Tempus Automation, Highlands Ranch, CO | Jun 2025 – Aug 2025
+• Trained and evaluated a C# / ML.NET model to automate deck design generation from computer vision inputs, using a custom dataset of materials, dimensions, pricing rules, and design constraints
+• Built a relational SQL database to store inventory, pricing logic, and model training data, then integrated the trained model into a web platform for real-time design recommendations and dynamic cost estimates
+
+Web Development Intern | Denver Center of African Art, Denver, CO | Jun 2024 – Sept 2024
+• Built a responsive website using HTML, CSS, and JavaScript and integrated Stripe donation payments with receipts and donor record tracking
 
 IT & Data Assistant | Michael Auto Sales, Denver, CO | Sept 2022 – Jan 2024
-• Analyzed profit/expense data using Excel and Python
-• Managed inventory using SQL in Dealer Cloud
-• Reduced data errors by 30%
+• Organized profit, expense, and inventory data using Excel, Python, SQL, and DealerCloud to track business performance and maintain accurate vehicle records
 
 PROJECTS
-Stock Prediction and Analysis Tool | Dec 2024 – Feb 2025
-• Built Streamlit app with Prophet, Random Forest models
-• Integrated TextBlob sentiment analysis and pandas-ta indicators
-• Achieved 85% prediction accuracy
+Stock Prediction and Analysis Tool
+• Built a machine learning stock forecasting platform with a Python backend and JavaScript frontend, using predictive models, sentiment analysis, trading signals, and model accuracy metrics to support interactive financial analysis
 
-DuDraw AI Coder | May 2025 – Jun 2025
-• AI tool that turns prompts into interactive games and visualizations
-• Uses large language models and DuDraw library
+DuDraw AI Coder
+• Built a full-stack AI web app where users enter natural language prompts and a large language model generates DuDraw code, turning user ideas into interactive drawings and simple games
 
-NYC COVID-19 Spread Simulation | Jul 2025 – Aug 2025
-• Interactive simulation with real-time visualization
-• Adjustable controls and epidemic curve tracking
+NYC COVID-19 Spread Simulation
+• Created an interactive epidemic modeling simulation that uses adjustable parameters such as lockdowns, patient zero, and spread speed to visualize infection trends through real-time epidemic curves
 
 LEADERSHIP
-President | National Society Of Black Engineers | Jun 2025 – Present
-Communications Chair | African Students United | Sep 2024 – Present`;
-    }
+President | National Society of Black Engineers, Denver, CO | Jun 2025 – Present
+• Raised $40,000 to send 30 students to the NSBE National Convention and organized a multi-company hiring fair, leading employer outreach, sponsorships, and event operations to expand student career opportunities`;
 }
-
 async function loadPDFJS() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
