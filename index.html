@@ -2190,34 +2190,6 @@ main { flex: 1; }
             </div>
         </div>
 
-<!-- AI Assistant Chat Window -->
-<div class="chatbot-container" id="chatbotContainer" style="display: none;">
-    <div class="chatbot-window" id="chatbotWindow">
-        <div class="chatbot-header">
-                    <div class="chatbot-title">
-                        <span>Caleb AI Chatbot</span>
-                    </div>
-            <div class="chatbot-controls">
-                <button class="chatbot-control-btn" onclick="refreshLiveData()" title="Refresh live data">⟳</button>
-                <button class="chatbot-control-btn" onclick="minimizeChatbot()">_</button>
-                <button class="chatbot-control-btn" onclick="closeChatbot()">×</button>
-            </div>
-        </div>
-                <div class="chatbot-messages" id="chatbotMessages">
-                    <div class="chatbot-message bot">
-                        Hi! I'm Caleb AI Chatbot. I'm here to help you learn about Caleb Woldemedhine. Feel free to ask me anything about his background, experience, projects, or skills!
-                    </div>
-                </div>
-        <div class="typing-indicator" id="typingIndicator">
-            <span>Caleb AI is thinking</span>
-            <span class="typing-dots">...</span>
-        </div>
-        <div class="chatbot-input-container">
-            <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Ask me anything..." maxlength="500">
-            <button class="chatbot-send" onclick="sendMessage()">Send</button>
-        </div>
-    </div>
-</div>
 <!-- Contact Section (fixed, no extra space, no long page) -->
 <div id="contact" class="Layout__Center-sc-zdm1ze-0 jGGuVW"
      style="background:#cfcfcf; padding:40px 0 20px; min-height:auto; height:auto;">
@@ -2795,5 +2767,34 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<!-- AI Assistant Chat Window - placed at end of body for proper fixed positioning -->
+<div class="chatbot-container" id="chatbotContainer" style="display: none;">
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="chatbot-header">
+            <div class="chatbot-title">
+                <span>Caleb AI Chatbot</span>
+            </div>
+            <div class="chatbot-controls">
+                <button class="chatbot-control-btn" onclick="refreshLiveData()" title="Refresh live data">⟳</button>
+                <button class="chatbot-control-btn" onclick="minimizeChatbot()">_</button>
+                <button class="chatbot-control-btn" onclick="closeChatbot()">×</button>
+            </div>
+        </div>
+        <div class="chatbot-messages" id="chatbotMessages">
+            <div class="chatbot-message bot">
+                Hi! I'm Caleb AI Chatbot. I'm here to help you learn about Caleb Woldemedhine. Feel free to ask me anything about his background, experience, projects, or skills!
+            </div>
+        </div>
+        <div class="typing-indicator" id="typingIndicator">
+            <span>Caleb AI is thinking</span>
+            <span class="typing-dots">...</span>
+        </div>
+        <div class="chatbot-input-container">
+            <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Ask me anything..." maxlength="500">
+            <button class="chatbot-send" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
