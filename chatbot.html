@@ -209,7 +209,6 @@
 </div>
 
 <script>
-const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY_HERE';
 
 const SYSTEM_PROMPT = `You are Caleb Woldemedhine's AI assistant. Answer questions about Caleb accurately and conversationally.
 
@@ -264,12 +263,9 @@ async function sendMessage() {
     document.getElementById('typing').style.display = 'block';
 
     try {
-        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        const res = await fetch('/.netlify/functions/chat', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENAI_API_KEY}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 model: 'gpt-4o-mini',
                 messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages.slice(-10)],
