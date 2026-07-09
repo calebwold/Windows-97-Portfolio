@@ -2500,13 +2500,23 @@ async function loadPDFJS() {
 
 // Chatbot UI functions
 function openChatbotFromNav() {
+    console.log('openChatbotFromNav called');
     const chatbotContainer = document.getElementById('chatbotContainer');
     const chatbotWindow = document.getElementById('chatbotWindow');
-    
+
+    console.log('chatbotContainer:', chatbotContainer);
+    console.log('chatbotWindow:', chatbotWindow);
+
+    if (!chatbotContainer || !chatbotWindow) {
+        console.error('Chatbot elements not found!');
+        return;
+    }
+
     chatbotContainer.style.display = 'block';
     chatbotWindow.style.display = 'flex';
-    
-    document.getElementById('chatbotInput').focus();
+
+    const input = document.getElementById('chatbotInput');
+    if (input) input.focus();
 }
 
 function closeChatbot() {
@@ -2757,14 +2767,17 @@ window.minimizeChatbot = minimizeChatbot;
 window.sendMessage = sendMessage;
 window.refreshLiveData = refreshLiveData;
 
-// Allow sending messages with Enter key
+
+// Allow sending messages with Enter key after DOM loads
 document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('chatbotInput');
-    input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
+    if (input) {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    }
 });
 </script>
 
