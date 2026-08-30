@@ -19,7 +19,6 @@
             height: 100%;
             font-family: 'ms_sans_serif', sans-serif;
             background: #c6c6c6;
-            /* Win97 grain overlay */
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
         }
 
@@ -73,7 +72,6 @@
             border-left: 2px solid #848584;
             border-right: 2px solid #fefefe;
             border-bottom: 2px solid #fefefe;
-            /* subtle grain on message area */
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"), linear-gradient(white, white);
         }
 
@@ -166,7 +164,6 @@
             padding-top: 4px;
         }
 
-        /* scrollbar */
         .messages::-webkit-scrollbar { width: 16px; }
         .messages::-webkit-scrollbar-track { background: #c6c6c6; border-left: 1px solid #848584; }
         .messages::-webkit-scrollbar-thumb {
@@ -182,6 +179,14 @@
             .message.user { margin-left: 8%; }
             .input-area button { padding: 3px 8px; }
         }
+
+        .status-bar {
+            padding: 2px 6px;
+            font-size: 10px;
+            color: #666;
+            border-top: 1px solid #848584;
+            background: #c6c6c6;
+        }
     </style>
 </head>
 <body>
@@ -190,6 +195,7 @@
     <div class="title-bar">
         <span>Caleb AI Chatbot</span>
         <div class="title-bar-controls">
+            <button onclick="refreshResumeData()" title="Refresh resume data">↻</button>
             <button onclick="window.close()">x</button>
         </div>
     </div>
@@ -206,44 +212,151 @@
         <input type="text" id="userInput" placeholder="Ask me anything..." maxlength="500" autofocus />
         <button onclick="sendMessage()">Send</button>
     </div>
+
+    <div class="status-bar" id="statusBar">Loading resume data...</div>
 </div>
 
 <script>
+// Resume data state
+let resumeData = null;
+let dataSource = 'loading';
 
-const SYSTEM_PROMPT = `You are Caleb Woldemedhine's AI assistant. Answer questions about Caleb accurately and conversationally.
+// Hardcoded fallback resume data (matches resume.pdf exactly)
+const FALLBACK_RESUME = `CALEB WOLDEMEDHINE
+(720) 410-4647 | caleb.woldemedhine1@gmail.com | linkedin.com/in/calebwold | github.com/calebwold
 
-ABOUT CALEB:
-- Computer Science student at University of Denver, AI & ML concentration, graduating March 2027
-- GPA: 3.66, Minors in Mathematics and Statistics
+EDUCATION
+University of Denver, Denver, CO
+B.S. in Computer Science (AI & ML Concentration) | Sept 2023 - Jun 2027
+Minors: Mathematics and Statistics
+GPA: 3.66
+Relevant Coursework: Database Organization & Management, Topics in Artificial Intelligence (Machine Learning & LLMs), Applied Math for Data Science and AI, Machine Learning for IoT and Embedded Devices, Linear Algebra, Introduction to Probability
 
-EXPERIENCE:
-- Software Engineering Intern at Palo Alto Networks (Jun 2026 - Present): LLM-driven visualization service, pub/sub and DAG-based multi-agent backend, Python test harness for visualization selection
-- Data Technician at Frederick S. Pardee Institute for International Futures (Sept 2025 - Present): Python/pandas for international education datasets, SQL import scripts
-- Software Engineering Intern at Tempus Automation (Jun 2025 - Aug 2025): C#/ML.NET model for deck design, relational SQL database
-- Web Development Intern at Denver Center of African Art (Jun 2024 - Sept 2024): HTML/CSS/JS website, Stripe integration
-- IT & Data Assistant at Michael Auto Sales (Sept 2022 - Jan 2024): Excel, Python, SQL, DealerCloud
+EXPERIENCE
+Machine Learning Research Intern — Prasath Lab | Cincinnati Children's Hospital Medical Center, Remote | Aug 2026 – Present
+• Developing and evaluating machine-learning and agentic AI methods for digital pathology, using LLMs and vision-language models to support whole-slide image analysis and diagnostic reasoning.
+• Conducting a technical review of recent pathology-agent systems, comparing their architectures, datasets, tool-use workflows, evaluation metrics, and clinical limitations to guide model development.
 
-PROJECTS:
-- Stock Prediction Tool: ML forecasting with Prophet & Random Forest, Python backend, JS frontend
-- DuDraw AI Coder: Full-stack AI web app, natural language to DuDraw code
-- NYC COVID-19 Simulation: Interactive epidemic modeling with Three.js
+Software Engineering Intern | Palo Alto Networks, Santa Clara, CA | June 2026 – Present
+• Built an LLM visualization service on a Pub/Sub backend that profiles datasets, selects the correct chart, and converts agent outputs into frontend JSON contracts. Created a sub-agent that infers data schemas and generates mock datasets to test 16 chart types and edge cases, achieving 94% chart-selection accuracy while ensuring all outputs could render in the UI.
+• Refactored the system into a single-spec chart catalog and migrated the LLM engine to Vertex AI. Built a seven-worker concurrent E2E testing system that automated multi-step Pub/Sub and HTTP flows, along with BigQuery tables and external views used for schema grounding, test validation, and monitoring.
 
-LEADERSHIP:
-- President, National Society of Black Engineers (Jun 2025 - Present): Raised $40,000, sent 30 students to NSBE National Convention
-- Communications Chair, African Students United (Sept 2024 - Present)
+Data Technician | Frederick S. Pardee Institute for International Futures, Denver, CO | Sept 2025 – Aug 2026
+• Cleaned and preprocessed international education datasets using Python and pandas, standardizing country-year coverage, resolving missing or inconsistent values, and running quality checks to prepare tables for database imports and website updates.
+• Built a Python import script to convert cleaned Excel datasets into SQL-ready inserts, automate formatting and loading workflows, and verify imported values against the Data Dictionary for accurate database integration.
 
-SKILLS:
-- Languages: Python, Java, C, C++, C#, SQL, JavaScript, TypeScript, R, HTML, CSS
-- AI/ML: PyTorch, TensorFlow, Keras, Scikit-learn, ML.NET, LangChain, OpenAI API
-- Data: pandas, NumPy, Plotly, Matplotlib, Tableau, Excel
-- Tools: AWS, Docker, Git, REST APIs
+Software Engineering Intern | Tempus Automation, Highlands Ranch, CO | Jun 2025 – Aug 2025
+• Built and evaluated a C# ML.NET model using a custom dataset of computer-vision-derived deck dimensions, material specifications, pricing data, and design constraints to predict material quantities and total project costs, then compared its predictions against expected results from test records.
+• Designed a MySQL database for inventory, pricing, and training data, then integrated the ML.NET model into a C# backend that queried the database and sent material recommendations and cost estimates to the frontend as JSON responses.
+
+Web Development Intern | Denver Center of African Art, Denver, CO | Jun 2024 – Sept 2024
+• Built a responsive website using HTML, CSS, and JavaScript and integrated Stripe donation payments with receipts and donor record tracking.
+
+PROJECTS
+Stock Prediction and Analysis Tool
+• Built a stock analysis and forecasting website with a Python backend and JavaScript frontend that gives users an interactive dashboard with price forecasts, sentiment insights, trading signals, and model accuracy results powered by machine learning.
+
+DuDraw AI Coder
+• Built a full-stack AI website where users enter a prompt and a large language model generates DuDraw code that turns their ideas into interactive drawings and simple games.
+
+TECHNICAL SKILLS
+Languages & Frameworks: Python, Java, C, C++, C#, SQL, JavaScript, TypeScript, HTML, CSS, React, Next.js, R, Haskell
+Libraries & Technologies: PyTorch, TensorFlow, Keras, Scikit-learn, Prophet, Pandas, Plotly, NumPy, Excel, Tableau, REST APIs, AWS, ML.NET, Docker, Git, Linux, JSON
+
+LEADERSHIP
+President | National Society of Black Engineers, Denver, CO | Jun 2025 – Present
+• Raised $40,000 to send 35 students to the NSBE National Convention and organized a multi-company hiring fair, leading employer outreach, sponsorships, and event operations to expand student career opportunities.`;
+
+// Build system prompt with resume data
+function buildSystemPrompt() {
+    return `You are Caleb Woldemedhine's AI assistant. Answer questions about Caleb accurately and conversationally.
+
+The following is Caleb's current resume data:
+
+${resumeData || FALLBACK_RESUME}
+
+INSTRUCTIONS:
+- Be friendly and concise
+- Use bullet points for lists
+- If asked something unrelated to Caleb, redirect back to topics about him
+- Always use the resume data above as the source of truth
 
 CONTACT:
 - Email: caleb.woldemedhine1@gmail.com
 - LinkedIn: linkedin.com/in/calebwold
-- GitHub: github.com/calebwold
+- GitHub: github.com/calebwold`;
+}
 
-Be friendly and concise. Use bullet points for lists. If asked something unrelated to Caleb, redirect back to topics about him.`;
+// Load PDF.js library
+async function loadPDFJS() {
+    return new Promise((resolve, reject) => {
+        if (window.pdfjsLib) {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        script.onload = () => {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            console.log('PDF.js loaded successfully');
+            resolve();
+        };
+        script.onerror = () => reject(new Error('Failed to load PDF.js'));
+        document.head.appendChild(script);
+        setTimeout(() => reject(new Error('PDF.js load timeout')), 10000);
+    });
+}
+
+// Extract text from resume.pdf using RAG
+async function extractResumeFromPDF() {
+    console.log('RAG: Attempting to extract text from resume.pdf...');
+
+    await loadPDFJS();
+
+    const response = await fetch('resume.pdf');
+    if (!response.ok) throw new Error('Resume fetch failed: ' + response.status);
+
+    const arrayBuffer = await response.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+
+    console.log('RAG: PDF loaded, extracting text from', pdf.numPages, 'pages...');
+
+    let fullText = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n';
+    }
+
+    console.log('RAG: Successfully extracted', fullText.length, 'characters from resume.pdf');
+    return fullText;
+}
+
+// Load resume data (RAG with fallback)
+async function loadResumeData() {
+    const statusBar = document.getElementById('statusBar');
+
+    try {
+        statusBar.textContent = 'Loading resume from PDF...';
+        resumeData = await extractResumeFromPDF();
+        dataSource = 'pdf';
+        statusBar.textContent = 'Using live resume data (PDF)';
+        console.log('Using RAG: resume.pdf extracted successfully');
+    } catch (error) {
+        console.warn('RAG failed, using hardcoded fallback:', error.message);
+        resumeData = FALLBACK_RESUME;
+        dataSource = 'fallback';
+        statusBar.textContent = 'Using cached resume data';
+    }
+}
+
+// Refresh resume data manually
+async function refreshResumeData() {
+    const statusBar = document.getElementById('statusBar');
+    statusBar.textContent = 'Refreshing resume data...';
+    await loadResumeData();
+}
 
 let messages = [];
 
@@ -268,7 +381,7 @@ async function sendMessage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 model: 'gpt-4o-mini',
-                messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages.slice(-10)],
+                messages: [{ role: 'system', content: buildSystemPrompt() }, ...messages.slice(-10)],
                 max_tokens: 500,
                 temperature: 0.7
             })
@@ -307,6 +420,9 @@ function addErrorMessage() {
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
 }
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', loadResumeData);
 </script>
 
 </body>

@@ -2049,9 +2049,11 @@ main { flex: 1; }
                         <p style="font-size: 18px; line-height: 1.6; margin-bottom: 20px;">
 <p>Hello, my name is Caleb Woldemedhine. I am a Computer Science student at the University of Denver with a concentration in Machine Learning and Artificial Intelligence, and minors in Mathematics and Statistics.</p>
 
-<p>I am currently a Software Engineering Intern at Palo Alto Networks, where I work on backend AI systems that help turn agent results into charts and tables for the frontend. I have worked with LLM prompts, JSON outputs, and Python testing to improve how the system chooses and validates visualizations.</p>
+<p>I am currently a Machine Learning Research Intern at Cincinnati Children's Hospital Medical Center (Prasath Lab), where I develop and evaluate machine-learning and agentic AI methods for digital pathology, using LLMs and vision-language models to support whole-slide image analysis and diagnostic reasoning.</p>
 
-<p>In Summer 2025, I worked as a Software Engineering Intern at Tempus Automation, where I trained and evaluated a C# / ML.NET model to help automate deck design and cost estimates using project dimensions, material choices, and pricing rules. I also helped organize pricing, inventory, and model training data using SQL and JSON. Outside of these roles, I have built generative AI tools, forecasting models, and data visualizations.</p>                        </p>
+<p>I am also a Software Engineering Intern at Palo Alto Networks, where I built an LLM visualization service on a Pub/Sub backend that profiles datasets, selects the correct chart, and converts agent outputs into frontend JSON contracts. I achieved 94% chart-selection accuracy and built a seven-worker concurrent E2E testing system with BigQuery integration.</p>
+
+<p>Previously, I worked as a Data Technician at the Frederick S. Pardee Institute for International Futures and as a Software Engineering Intern at Tempus Automation, where I built ML.NET models for cost prediction. Outside of these roles, I have built generative AI tools, forecasting models, and data visualizations.</p>                        </p>
                     </div>
                 </div>
             </div>
@@ -2412,20 +2414,25 @@ function extractInfo(pattern, text) {
     return match ? match[1] : null;
 }
 
-// Enhanced resume extraction with better fallback
+// Enhanced resume extraction with RAG (reads PDF dynamically) and fallback
 async function extractResumeText() {
     try {
+        console.log('RAG: Attempting to extract text from resume.pdf...');
+
         // Load PDF.js if not already loaded
         if (!window.pdfjsLib) {
+            console.log('RAG: Loading PDF.js library...');
             await loadPDFJS();
         }
-        
+
         const response = await fetch('resume.pdf');
-        if (!response.ok) throw new Error('Resume fetch failed');
-        
+        if (!response.ok) throw new Error('Resume fetch failed: ' + response.status);
+
         const arrayBuffer = await response.arrayBuffer();
         const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
-        
+
+        console.log('RAG: PDF loaded, extracting text from', pdf.numPages, 'pages...');
+
         let fullText = '';
         for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
@@ -2433,67 +2440,70 @@ async function extractResumeText() {
             const pageText = textContent.items.map(item => item.str).join(' ');
             fullText += pageText + '\n';
         }
-        
+
+        console.log('RAG: Successfully extracted', fullText.length, 'characters from resume.pdf');
         return fullText;
     } catch (error) {
-        console.warn('Using fallback resume data');
+        console.warn('RAG failed, using hardcoded fallback resume data. Error:', error.message);
         // Comprehensive fallback resume data
 return `CALEB WOLDEMEDHINE
-Email: caleb.woldemedhine1@gmail.com | Phone: 720-410-4647
-LinkedIn: linkedin.com/in/calebwold | GitHub: github.com/calebwold
+(720) 410-4647 | caleb.woldemedhine1@gmail.com | linkedin.com/in/calebwold | github.com/calebwold
 
 EDUCATION
 University of Denver, Denver, CO
-Bachelor of Science, Computer Science (AI & ML Concentration) | GPA: 3.66
-Minors: Mathematics and Statistics | Expected Graduation: March 2027
-
-Relevant Coursework: Data Structures & Algorithms I & II, Object-Oriented Software Development, Systems I & II, Database Organization & Management, Topics in Artificial Intelligence (Machine Learning & LLMs), Applied Math for Data Science and AI, Machine Learning for IoT and Embedded Devices, Linear Algebra, Discrete Structures, Introduction to Probability
-
-TECHNICAL SKILLS
-Languages & Frameworks: Python, Java, C, C++, C#, SQL, JavaScript, TypeScript, R, Haskell, HTML, CSS, React, Next.js
-Libraries & Technologies: PyTorch, TensorFlow, Keras, Scikit-learn, ML.NET, Prophet, pandas, NumPy, Plotly, JSON, REST APIs, AWS, Docker, Git, Linux, Excel, Tableau
+B.S. in Computer Science (AI & ML Concentration) | Sept 2023 - Jun 2027
+Minors: Mathematics and Statistics
+GPA: 3.66
+Relevant Coursework: Database Organization & Management, Topics in Artificial Intelligence (Machine Learning & LLMs), Applied Math for Data Science and AI, Machine Learning for IoT and Embedded Devices, Linear Algebra, Introduction to Probability
 
 EXPERIENCE
-Software Engineering Intern | Palo Alto Networks, Santa Clara, CA | Jun 2026 – Present
-• Integrated an LLM-driven visualization service into a pub/sub and DAG-based multi-agent backend, converting agent query results into frontend-ready JSON for PANWDS chart and table rendering
-• Built a Python test harness to evaluate visualization-selection accuracy with real agent outputs, then refined LLM prompts and fixed backend data-shaping/routing issues across metric, table, bar, line, donut, scatter, and heatmap components
+Machine Learning Research Intern — Prasath Lab | Cincinnati Children's Hospital Medical Center, Remote | Aug 2026 – Present
+• Developing and evaluating machine-learning and agentic AI methods for digital pathology, using LLMs and vision-language models to support whole-slide image analysis and diagnostic reasoning.
+• Conducting a technical review of recent pathology-agent systems, comparing their architectures, datasets, tool-use workflows, evaluation metrics, and clinical limitations to guide model development.
 
-Data Technician | Frederick S. Pardee Institute for International Futures, Denver, CO | Sept 2025 – Present
-• Cleaned and preprocessed international education datasets using Python and pandas, standardizing country-year coverage, resolving missing or inconsistent values, and running quality checks before database and website updates
-• Built a Python import script to convert cleaned Excel datasets into SQL-ready inserts, automate formatting and loading workflows, and verify imported values against the Data Dictionary for accurate database integration
+Software Engineering Intern | Palo Alto Networks, Santa Clara, CA | June 2026 – Present
+• Built an LLM visualization service on a Pub/Sub backend that profiles datasets, selects the correct chart, and converts agent outputs into frontend JSON contracts. Created a sub-agent that infers data schemas and generates mock datasets to test 16 chart types and edge cases, achieving 94% chart-selection accuracy while ensuring all outputs could render in the UI.
+• Refactored the system into a single-spec chart catalog and migrated the LLM engine to Vertex AI. Built a seven-worker concurrent E2E testing system that automated multi-step Pub/Sub and HTTP flows, along with BigQuery tables and external views used for schema grounding, test validation, and monitoring.
+
+Data Technician | Frederick S. Pardee Institute for International Futures, Denver, CO | Sept 2025 – Aug 2026
+• Cleaned and preprocessed international education datasets using Python and pandas, standardizing country-year coverage, resolving missing or inconsistent values, and running quality checks to prepare tables for database imports and website updates.
+• Built a Python import script to convert cleaned Excel datasets into SQL-ready inserts, automate formatting and loading workflows, and verify imported values against the Data Dictionary for accurate database integration.
 
 Software Engineering Intern | Tempus Automation, Highlands Ranch, CO | Jun 2025 – Aug 2025
-• Trained and evaluated a C# / ML.NET model to automate deck design generation from computer vision inputs, using a custom dataset of materials, dimensions, pricing rules, and design constraints
-• Built a relational SQL database to store inventory, pricing logic, and model training data, then integrated the trained model into a web platform for real-time design recommendations and dynamic cost estimates
+• Built and evaluated a C# ML.NET model using a custom dataset of computer-vision-derived deck dimensions, material specifications, pricing data, and design constraints to predict material quantities and total project costs, then compared its predictions against expected results from test records.
+• Designed a MySQL database for inventory, pricing, and training data, then integrated the ML.NET model into a C# backend that queried the database and sent material recommendations and cost estimates to the frontend as JSON responses.
 
 Web Development Intern | Denver Center of African Art, Denver, CO | Jun 2024 – Sept 2024
-• Built a responsive website using HTML, CSS, and JavaScript and integrated Stripe donation payments with receipts and donor record tracking
-
-IT & Data Assistant | Michael Auto Sales, Denver, CO | Sept 2022 – Jan 2024
-• Organized profit, expense, and inventory data using Excel, Python, SQL, and DealerCloud to track business performance and maintain accurate vehicle records
+• Built a responsive website using HTML, CSS, and JavaScript and integrated Stripe donation payments with receipts and donor record tracking.
 
 PROJECTS
 Stock Prediction and Analysis Tool
-• Built a machine learning stock forecasting platform with a Python backend and JavaScript frontend, using predictive models, sentiment analysis, trading signals, and model accuracy metrics to support interactive financial analysis
+• Built a stock analysis and forecasting website with a Python backend and JavaScript frontend that gives users an interactive dashboard with price forecasts, sentiment insights, trading signals, and model accuracy results powered by machine learning.
 
 DuDraw AI Coder
-• Built a full-stack AI web app where users enter natural language prompts and a large language model generates DuDraw code, turning user ideas into interactive drawings and simple games
+• Built a full-stack AI website where users enter a prompt and a large language model generates DuDraw code that turns their ideas into interactive drawings and simple games.
 
-NYC COVID-19 Spread Simulation
-• Created an interactive epidemic modeling simulation that uses adjustable parameters such as lockdowns, patient zero, and spread speed to visualize infection trends through real-time epidemic curves
+TECHNICAL SKILLS
+Languages & Frameworks: Python, Java, C, C++, C#, SQL, JavaScript, TypeScript, HTML, CSS, React, Next.js, R, Haskell
+Libraries & Technologies: PyTorch, TensorFlow, Keras, Scikit-learn, Prophet, Pandas, Plotly, NumPy, Excel, Tableau, REST APIs, AWS, ML.NET, Docker, Git, Linux, JSON
 
 LEADERSHIP
 President | National Society of Black Engineers, Denver, CO | Jun 2025 – Present
-• Raised $40,000 to send 30 students to the NSBE National Convention and organized a multi-company hiring fair, leading employer outreach, sponsorships, and event operations to expand student career opportunities`;
+• Raised $40,000 to send 35 students to the NSBE National Convention and organized a multi-company hiring fair, leading employer outreach, sponsorships, and event operations to expand student career opportunities.`;
 }
 async function loadPDFJS() {
     return new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-        script.onload = resolve;
+        script.onload = () => {
+            // Configure PDF.js worker
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            console.log('PDF.js loaded successfully with worker');
+            resolve();
+        };
         script.onerror = reject;
         document.head.appendChild(script);
-        
+
         setTimeout(() => reject(new Error('PDF.js load timeout')), 10000);
     });
 }
@@ -2593,43 +2603,51 @@ CRITICAL RULES:
 6. Use live data when available (marked with timestamps below)
 
 CORE INFORMATION:
-Education: University of Denver, Computer Science (AI & ML Concentration), graduating March 2027
+Education: University of Denver, Computer Science (AI & ML Concentration), Sept 2023 - Jun 2027
 Minors: Mathematics and Statistics
+GPA: 3.66
+Relevant Coursework: Database Organization & Management, Topics in Artificial Intelligence (Machine Learning & LLMs), Applied Math for Data Science and AI, Machine Learning for IoT and Embedded Devices, Linear Algebra, Introduction to Probability
 
 WORK EXPERIENCE:
-1. Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025)
-   - Trained AI model for deck design using C# and MySQL
-   - Built custom database infrastructure
-   - Created web interface for AI integration
+1. Machine Learning Research Intern at Cincinnati Children's Hospital Medical Center — Prasath Lab (Aug 2026 – Present, Remote)
+   - Developing and evaluating machine-learning and agentic AI methods for digital pathology
+   - Using LLMs and vision-language models to support whole-slide image analysis and diagnostic reasoning
+   - Conducting technical review of pathology-agent systems, comparing architectures, datasets, tool-use workflows, and evaluation metrics
 
-2. Web Developer at Denver Center for African Art (Jun 2024 – Sept 2024)
-   - Built responsive website with HTML, CSS, JavaScript
-   - Integrated Stripe payment system
-   - Improved user engagement by 40%
+2. Software Engineering Intern at Palo Alto Networks (June 2026 – Present, Santa Clara, CA)
+   - Built an LLM visualization service on a Pub/Sub backend that profiles datasets, selects the correct chart, and converts agent outputs into frontend JSON contracts
+   - Created a sub-agent that infers data schemas and generates mock datasets to test 16 chart types, achieving 94% chart-selection accuracy
+   - Refactored system into single-spec chart catalog and migrated LLM engine to Vertex AI
+   - Built seven-worker concurrent E2E testing system with BigQuery tables for schema grounding, test validation, and monitoring
 
-3. IT & Data Assistant at Michael Auto Sales (Sept 2022 – Jan 2024)
-   - Analyzed profit/expense data using Excel and Python
-   - Managed inventory with SQL
-   - Reduced data errors by 30%
+3. Data Technician at Frederick S. Pardee Institute for International Futures (Sept 2025 – Aug 2026, Denver, CO)
+   - Cleaned and preprocessed international education datasets using Python and pandas
+   - Built Python import script to convert Excel datasets into SQL-ready inserts with Data Dictionary verification
+
+4. Software Engineering Intern at Tempus Automation (Jun 2025 – Aug 2025, Highlands Ranch, CO)
+   - Built and evaluated C# ML.NET model for predicting material quantities and project costs from deck dimensions
+   - Designed MySQL database for inventory, pricing, and training data integrated into C# backend
+
+5. Web Development Intern at Denver Center of African Art (Jun 2024 – Sept 2024, Denver, CO)
+   - Built responsive website using HTML, CSS, and JavaScript
+   - Integrated Stripe donation payments with receipts and donor record tracking
 
 PROJECTS:
-1. Stock Prediction Tool - Streamlit app with Prophet & Random Forest models
-2. DuDraw AI Coder - Turns prompts into interactive games and visualizations
-3. NYC COVID-19 Simulation - Real-time epidemic modeling with interactive controls
+1. Stock Prediction and Analysis Tool - Stock analysis and forecasting website with Python backend and JavaScript frontend, interactive dashboard with price forecasts, sentiment insights, trading signals, and model accuracy results
+2. DuDraw AI Coder - Full-stack AI website where users enter a prompt and LLM generates DuDraw code for interactive drawings and simple games
 
 LEADERSHIP:
-- President of National Society of Black Engineers (Jun 2025 – Present)
-- Communications Chair of African Students United (Sep 2024 – Present)
+- President of National Society of Black Engineers (Jun 2025 – Present, Denver, CO)
+- Raised $40,000 to send 35 students to NSBE National Convention
+- Organized multi-company hiring fair with employer outreach, sponsorships, and event operations
 
 TECHNICAL SKILLS:
-- Languages: Python, Java, C++, C#, HTML, CSS, JavaScript, SQL
-- AI/ML: TensorFlow, PyTorch, Scikit-learn, NLP, Deep Learning
-- Data: Pandas, NumPy, Matplotlib, Plotly, Excel, Tableau
-- Tools: Git, MySQL, MongoDB, REST APIs
+- Languages & Frameworks: Python, Java, C, C++, C#, SQL, JavaScript, TypeScript, HTML, CSS, React, Next.js, R, Haskell
+- Libraries & Technologies: PyTorch, TensorFlow, Keras, Scikit-learn, Prophet, Pandas, Plotly, NumPy, Excel, Tableau, REST APIs, AWS, ML.NET, Docker, Git, Linux, JSON
 
 CONTACT:
 - Email: caleb.woldemedhine1@gmail.com
-- Phone: 720-410-4647
+- Phone: (720) 410-4647
 - LinkedIn: linkedin.com/in/calebwold
 - GitHub: github.com/calebwold
 `;
